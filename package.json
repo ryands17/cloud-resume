@@ -1,0 +1,35 @@
+{
+  "name": "cloud-resume-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "license": "ISC",
+  "workspaces": [
+    "packages/*"
+  ],
+  "description": "My portfolio deployed to AWS",
+  "scripts": {
+    "deploy": "yarn workspace resume package && yarn workspace infra deploy"
+  },
+  "keywords": [
+    "cloud-resume-challenge"
+  ],
+  "author": "Ryan Dsouza",
+  "devDependencies": {
+    "cross-env": "7.0.3",
+    "husky": "6.0.0",
+    "lint-staged": "11.0.0",
+    "prettier": "2.2.1"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "lint-staged": {
+    "packages/resume/**/*.+(js|jsx)": [
+      "eslint --fix"
+    ],
+    "*.+(js|jsx|ts|json|css|md|mdx)": [
+      "prettier --write"
+    ]
+  }
+}
