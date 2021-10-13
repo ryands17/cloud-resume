@@ -3,10 +3,16 @@ import * as s3 from '@aws-cdk/aws-s3'
 import * as s3Deploy from '@aws-cdk/aws-s3-deployment'
 import * as cdn from '@aws-cdk/aws-cloudfront'
 import * as iam from '@aws-cdk/aws-iam'
+import * as lambda from '@aws-cdk/aws-lambda'
+import * as logs from '@aws-cdk/aws-logs'
+import * as cr from '@aws-cdk/custom-resources'
 
 export class InfraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
+
+    const ssmParameterPath = this.node.tryGetContext('acmArnPath')
+    const certRegion = 'us-east-1'
 
     // Create static website bucket and point to assets
     const portfolio = new s3.Bucket(this, 'portfolio', {
@@ -24,16 +30,60 @@ export class InfraStack extends cdk.Stack {
       comment: `OAI for the portfolio website`,
     })
 
-    new cdn.CloudFrontWebDistribution(this, 'portfolioCDN', {
-      // todo: change to price_class_200
+    const applyCacheHeaders = new cdn.experimental.EdgeFunction(
+      this,
+      'applyCacheHeaders',
+      {
+        code: lambda.Code.fromAsset('edge-functions'),
+        handler: 'applyCacheHeaders.handler',
+        runtime: lambda.Runtime.NODEJS_14_X,
+        logRetention: logs.RetentionDays.ONE_WEEK,
+      }
+    )
+
+    const fetchCertArn = new cr.AwsCustomResource(this, 'fetchCertArn', {
+      resourceType: 'Custom::FetchCertArn',
+      onUpdate: {
+        service: 'SSM',
+        action: 'getParameter',
+        region: certRegion,
+        parameters: {
+          Name: ssmParameterPath,
+        },
+        physicalResourceId: cr.PhysicalResourceId.of(`cert${ssmParameterPath}`),
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [`arn:aws:ssm:${certRegion}:*:parameter${ssmParameterPath}`],
+      }),
+      logRetention: logs.RetentionDays.ONE_DAY,
+    })
+
+    const dist = new cdn.CloudFrontWebDistribution(this, 'portfolioCDN', {
       priceClass: cdn.PriceClass.PRICE_CLASS_100,
+      viewerCertificate: {
+        aliases: [this.node.tryGetContext('domain')],
+        props: {
+          acmCertificateArn: fetchCertArn.getResponseField('Parameter.Value'),
+          sslSupportMethod: 'sni-only',
+        },
+      },
       originConfigs: [
         {
           s3OriginSource: {
             s3BucketSource: portfolio,
             originAccessIdentity: cloudFrontOAI,
           },
-          behaviors: [{ isDefaultBehavior: true }],
+          behaviors: [
+            {
+              isDefaultBehavior: true,
+              lambdaFunctionAssociations: [
+                {
+                  eventType: cdn.LambdaEdgeEventType.ORIGIN_RESPONSE,
+                  lambdaFunction: applyCacheHeaders.currentVersion,
+                },
+              ],
+            },
+          ],
         },
       ],
     })
@@ -46,5 +96,9 @@ export class InfraStack extends cdk.Stack {
       cloudFrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId
     )
     portfolio.addToResourcePolicy(cloudfrontS3Access)
+
+    new cdk.CfnOutput(this, 'distUrl', {
+      value: dist.distributionDomainName,
+    })
   }
 }

@@ -9,6 +9,16 @@ linkedin: https://www.linkedin.com/in/ryan-dsouza-880522125
 github: https://github.com/ryands17
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed neque elit, tristique placerat feugiat ac, facilisis vitae arcu. Proin eget egestas augue. Praesent ut sem nec arcu pellentesque aliquet. Duis dapibus diam vel metus tempus vulputate.
+### A brief intro
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed neque elit, tristique placerat feugiat ac, facilisis vitae arcu. Proin eget egestas augue. Praesent ut sem nec arcu pellentesque aliquet. Duis dapibus diam vel metus tempus vulputate.
+I love creating Webapps and deploying them to the Cloud (AWS). My main area of expertise is in JavaScript/TypeScript, Python, React, GraphQL, and AWS, but love experimenting with new languages like Rust and ochestration systems like Kubernetes. I love the idea of Serverless so I always strive to implement Serverless solutions in every project and follow the Well-Architected principles. I have worked with services like Lambda, ECS, Step Functions, SQS, AppSync etc. to create medium/large scale Webapps. I'm currently working @ [Prisma](https://www.prisma.io/) as a Developer Success Engineer.
+
+In my spare time, I write blogs on [Dev Community](https://dev.to/ryands17) on things like React, Node, and AWS. I hope to help others with these posts so that they get an easy way of doing the things that I experienced.
+
+### What I do to keep myself sane
+
+I love to play the Guitar, Ukulele and I'm up for a jamming session if you'd like. I also enjoy reading books/blogs especially about life, principles and the world in general. I also play snooker and follow the game closely. Travelling is one of my favourites and I love exploring places.
+
+### Ways to reach me
+
+I have my contact info on the left/top (depending on your device) and below where you can reach me via Email, Twitter, or LinkedIn. Cheers!
