@@ -5,7 +5,7 @@ const siteMetadata = {
   description:
     'A Full Stack Cloud Native Engineer who loves working with the JS ecosystem and AWS',
   language: 'en-gb',
-  siteUrl: 'https://www.ryan17.dev',
+  siteUrl: 'https://ryan17.dev',
   image: '/static/images/avatar.png',
   email: 'contact@ryan17.dev',
   github: 'https://github.com/ryands17',

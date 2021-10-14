@@ -11,7 +11,7 @@ github: https://github.com/ryands17
 
 ### A brief intro
 
-I love creating Webapps and deploying them to the Cloud (AWS). My main area of expertise is in JavaScript/TypeScript, Python, React, GraphQL, and AWS, but love experimenting with new languages like Rust and ochestration systems like Kubernetes. I love the idea of Serverless so I always strive to implement Serverless solutions in every project and follow the Well-Architected principles. I have worked with services like Lambda, ECS, Step Functions, SQS, AppSync etc. to create medium/large scale Webapps. I'm currently working @ [Prisma](https://www.prisma.io/) as a Developer Success Engineer.
+I love creating Webapps and deploying them to the Cloud (AWS). My main area of expertise is in JavaScript/TypeScript, Python, React, GraphQL, and AWS, but love experimenting with new languages like Rust and orchestration systems like Kubernetes. I love the idea of Serverless so I always strive to implement Serverless solutions in every project and follow the Well-Architected principles. I have worked with services like Lambda, ECS, Step Functions, SQS, AppSync etc. to create medium/large scale Webapps. I'm currently working @ [Prisma](https://www.prisma.io/) as a Developer Success Engineer.
 
 In my spare time, I write blogs on [Dev Community](https://dev.to/ryands17) on things like React, Node, and AWS. I hope to help others with these posts so that they get an easy way of doing the things that I experienced.
 
