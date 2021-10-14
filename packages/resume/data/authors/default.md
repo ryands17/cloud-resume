@@ -15,6 +15,8 @@ I love creating Webapps and deploying them to the Cloud (AWS). My main area of e
 
 In my spare time, I write blogs on [Dev Community](https://dev.to/ryands17) on things like React, Node, and AWS. I hope to help others with these posts so that they get an easy way of doing the things that I experienced.
 
+This portfolio is deployed on S3 served via CloudFront and all the resources are managed via the CDK. I also have added a [Lambda@Edge](https://aws.amazon.com/lambda/edge/) function for granular caching and used a Custom Resource to fetch the ACM ARN (in `us-east-1`) to add an SSL certificate to CloudFront for my custom domain.
+
 ### What I do to keep myself sane
 
 I love to play the Guitar, Ukulele and I'm up for a jamming session if you'd like. I also enjoy reading books/blogs especially about life, principles and the world in general. I also play snooker and follow the game closely. Travelling is one of my favourites and I love exploring places.
