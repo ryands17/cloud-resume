@@ -1,4 +1,7 @@
 {
   "acmArnPath": "/portfolio/certArn",
-  "domain": "ryan17.dev"
+  "domain": {
+    "apex": "ryan17.dev",
+    "www": "www.ryan17.dev"
+  }
 }

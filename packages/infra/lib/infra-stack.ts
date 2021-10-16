@@ -14,33 +14,6 @@ export class InfraStack extends cdk.Stack {
     const ssmParameterPath = this.node.tryGetContext('acmArnPath')
     const certRegion = 'us-east-1'
 
-    // Create static website bucket and point to assets
-    const portfolio = new s3.Bucket(this, 'portfolio', {
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: '404.html',
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    })
-
-    new s3Deploy.BucketDeployment(this, 'deployPortfolio', {
-      sources: [s3Deploy.Source.asset('../resume/out')],
-      destinationBucket: portfolio,
-    })
-
-    const cloudFrontOAI = new cdn.OriginAccessIdentity(this, 'portfolioOAI', {
-      comment: `OAI for the portfolio website`,
-    })
-
-    const applyCacheHeaders = new cdn.experimental.EdgeFunction(
-      this,
-      'applyCacheHeaders',
-      {
-        code: lambda.Code.fromAsset('edge-functions'),
-        handler: 'applyCacheHeaders.handler',
-        runtime: lambda.Runtime.NODEJS_14_X,
-        logRetention: logs.RetentionDays.ONE_WEEK,
-      }
-    )
-
     const fetchCertArn = new cr.AwsCustomResource(this, 'fetchCertArn', {
       resourceType: 'Custom::FetchCertArn',
       onUpdate: {
@@ -58,20 +31,78 @@ export class InfraStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_DAY,
     })
 
+    this.createDomain(fetchCertArn.getResponseField('Parameter.Value'))
+    this.createWwwDomain(fetchCertArn.getResponseField('Parameter.Value'))
+  }
+
+  createDomain(certArn: string) {
+    const domain = this.node.tryGetContext('domain')
+
+    // Create static website bucket and point to assets
+    const portfolio = new s3.Bucket(this, 'portfolio', {
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: '404.html',
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    })
+
+    portfolio.addToResourcePolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:GetObject'],
+        resources: [`${portfolio.bucketArn}/*`],
+        conditions: {
+          StringLike: { 'aws:Referer': process.env.S3_REFERER },
+        },
+        principals: [new iam.StarPrincipal()],
+      })
+    )
+
+    portfolio.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.DENY,
+        actions: ['s3:GetObject'],
+        resources: [`${portfolio.bucketArn}/*`],
+        conditions: {
+          StringNotLike: { 'aws:Referer': process.env.S3_REFERER },
+        },
+        principals: [new iam.StarPrincipal()],
+      })
+    )
+
+    new s3Deploy.BucketDeployment(this, 'deployPortfolio', {
+      sources: [s3Deploy.Source.asset('../resume/out')],
+      destinationBucket: portfolio,
+    })
+
+    const applyCacheHeaders = new cdn.experimental.EdgeFunction(
+      this,
+      'applyCacheHeaders',
+      {
+        code: lambda.Code.fromAsset('edge-functions'),
+        handler: 'applyCacheHeaders.handler',
+        runtime: lambda.Runtime.NODEJS_14_X,
+        logRetention: logs.RetentionDays.ONE_WEEK,
+      }
+    )
+
     const dist = new cdn.CloudFrontWebDistribution(this, 'portfolioCDN', {
       priceClass: cdn.PriceClass.PRICE_CLASS_100,
+      defaultRootObject: '',
       viewerCertificate: {
-        aliases: [this.node.tryGetContext('domain')],
+        aliases: [domain.apex],
         props: {
-          acmCertificateArn: fetchCertArn.getResponseField('Parameter.Value'),
-          sslSupportMethod: 'sni-only',
+          acmCertificateArn: certArn,
+          sslSupportMethod: cdn.SSLMethod.SNI,
+          minimumProtocolVersion: cdn.SecurityPolicyProtocol.TLS_V1_2_2021,
         },
       },
       originConfigs: [
         {
-          s3OriginSource: {
-            s3BucketSource: portfolio,
-            originAccessIdentity: cloudFrontOAI,
+          customOriginSource: {
+            domainName: portfolio.bucketWebsiteDomainName,
+            originProtocolPolicy: cdn.OriginProtocolPolicy.HTTP_ONLY,
+            originHeaders: {
+              Referer: process.env.S3_REFERER,
+            },
           },
           behaviors: [
             {
@@ -88,16 +119,70 @@ export class InfraStack extends cdk.Stack {
       ],
     })
 
-    const cloudfrontS3Access = new iam.PolicyStatement({
-      actions: ['s3:GetBucket*', 's3:GetObject*', 's3:List*'],
-      resources: [portfolio.bucketArn, `${portfolio.bucketArn}/*`],
-    })
-    cloudfrontS3Access.addCanonicalUserPrincipal(
-      cloudFrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId
-    )
-    portfolio.addToResourcePolicy(cloudfrontS3Access)
-
     new cdk.CfnOutput(this, 'distUrl', {
+      value: dist.distributionDomainName,
+    })
+  }
+
+  createWwwDomain(certArn: string) {
+    const domain = this.node.tryGetContext('domain')
+
+    const portfolio = new s3.Bucket(this, 'portfolioWww', {
+      bucketName: domain.www,
+      websiteRedirect: {
+        hostName: domain.apex,
+        protocol: s3.RedirectProtocol.HTTPS,
+      },
+    })
+
+    portfolio.addToResourcePolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:GetObject'],
+        resources: [`${portfolio.bucketArn}/*`],
+        conditions: {
+          StringLike: { 'aws:Referer': process.env.S3_REFERER },
+        },
+        principals: [new iam.StarPrincipal()],
+      })
+    )
+
+    portfolio.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.DENY,
+        actions: ['s3:GetObject'],
+        resources: [`${portfolio.bucketArn}/*`],
+        conditions: {
+          StringNotLike: { 'aws:Referer': process.env.S3_REFERER },
+        },
+        principals: [new iam.StarPrincipal()],
+      })
+    )
+
+    const dist = new cdn.CloudFrontWebDistribution(this, 'portfolioWwwCDN', {
+      priceClass: cdn.PriceClass.PRICE_CLASS_100,
+      viewerCertificate: {
+        aliases: [domain.www],
+        props: {
+          acmCertificateArn: certArn,
+          sslSupportMethod: cdn.SSLMethod.SNI,
+          minimumProtocolVersion: cdn.SecurityPolicyProtocol.TLS_V1_2_2021,
+        },
+      },
+      originConfigs: [
+        {
+          customOriginSource: {
+            domainName: portfolio.bucketWebsiteDomainName,
+            originProtocolPolicy: cdn.OriginProtocolPolicy.HTTP_ONLY,
+            originHeaders: {
+              Referer: process.env.S3_REFERER,
+            },
+          },
+          behaviors: [{ isDefaultBehavior: true }],
+        },
+      ],
+    })
+
+    new cdk.CfnOutput(this, 'distWwwUrl', {
       value: dist.distributionDomainName,
     })
   }
