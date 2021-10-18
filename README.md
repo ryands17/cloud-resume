@@ -1,5 +1,7 @@
 # Cloud Resume
 
+[![Build Status](https://github.com/ryands17/cloud-resume/actions/workflows/main.yml/badge.svg)](https://github.com/ryands17/cloud-resume/actions/workflows/main.yml)
+
 This is a [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/) blogging resume/portfolio forked from this [Demo Blog](https://tailwind-nextjs-starter-blog.vercel.app/).
 
 ## Infrastructure as Code (CDK TypeScript)
