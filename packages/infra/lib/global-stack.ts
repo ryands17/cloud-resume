@@ -6,10 +6,12 @@ export class GlobalStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
 
+    const domain = this.node.tryGetContext('domain')
+
     // ACM certificate for the domain
     const cert = new acm.Certificate(this, 'personalDomain', {
-      domainName: 'ryan17.dev',
-      subjectAlternativeNames: ['*.ryan17.dev'],
+      domainName: domain.apex,
+      subjectAlternativeNames: [`*.${domain.apex}`],
       validation: acm.CertificateValidation.fromDns(),
     })
 

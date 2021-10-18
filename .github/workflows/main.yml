@@ -1,0 +1,47 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      S3_REFERER: ${{ secrets.S3_REFERER }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            nodeModules-
+
+      - name: Cache Next.js build
+        uses: actions/cache@v2
+        with:
+          path: packages/resume/.next
+          key: next-build-${{ github.sha }}
+          restore-keys: |
+            next-build-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build Portfolio
+        run: yarn workspace resume package
+
+      - name: Run Tests
+        run: yarn test --coverage --maxWorkers=2

@@ -7,9 +7,9 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk",
-    "deploy": "dotenv -- cdk deploy InfraStack"
+    "test": "dotenv -- jest",
+    "cdk": "dotenv -- cdk",
+    "deploy": "cdk deploy InfraStack"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.127.0",

@@ -8,6 +8,7 @@
   ],
   "description": "My portfolio deployed to AWS",
   "scripts": {
+    "test": "yarn workspace infra test",
     "deploy": "yarn workspace resume package && yarn workspace infra deploy"
   },
   "keywords": [
