@@ -118,10 +118,6 @@ export class InfraStack extends cdk.Stack {
         },
       ],
     })
-
-    new cdk.CfnOutput(this, 'distUrl', {
-      value: dist.distributionDomainName,
-    })
   }
 
   createWwwDomain(certArn: string) {
@@ -180,10 +176,6 @@ export class InfraStack extends cdk.Stack {
           behaviors: [{ isDefaultBehavior: true }],
         },
       ],
-    })
-
-    new cdk.CfnOutput(this, 'distWwwUrl', {
-      value: dist.distributionDomainName,
     })
   }
 }
