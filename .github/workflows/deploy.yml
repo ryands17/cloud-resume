@@ -1,0 +1,69 @@
+name: Build and Deploy
+on: workflow_dispatch
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+    env:
+      S3_REFERER: ${{ secrets.S3_REFERER }}
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_WEB_IDENTITY_TOKEN_FILE: '/tmp/awscreds'
+      AWS_DEFAULT_REGION: us-east-2
+      AWS_REGION: us-east-2
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+
+      - name: Use cached node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            nodeModules-
+
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            nodeModules-
+
+      - name: Cache Next.js build
+        uses: actions/cache@v2
+        with:
+          path: packages/resume/.next
+          key: next-build-${{ github.sha }}
+          restore-keys: |
+            next-build-
+
+      - name: Install dependencies
+        run: sleep 5 && yarn install --frozen-lockfile
+
+      - name: Configure AWS
+        run: |
+          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
+          export AWS_WEB_IDENTITY_TOKEN=$(cat $AWS_WEB_IDENTITY_TOKEN_FILE)
+          AWS_CREDS=$(aws sts assume-role-with-web-identity \
+            --role-arn $AWS_ROLE_ARN \
+            --role-session-name CdkDeploy \
+            --duration-seconds 900 \
+            --web-identity-token $AWS_WEB_IDENTITY_TOKEN)
+
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_CREDS | jq -r '.Credentials.AccessKeyId')
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_CREDS | jq -r '.Credentials.SecretAccessKey')
+          export AWS_SESSION_TOKEN=$(echo $AWS_CREDS | jq -r '.Credentials.SessionToken')
+
+      - name: Deploy app
+        run: yarn deploy

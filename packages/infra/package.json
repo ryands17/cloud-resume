@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "test": "dotenv -- jest",
     "cdk": "dotenv -- cdk",
-    "deploy": "cdk deploy InfraStack"
+    "deploy:ci": "cdk deploy InfraStack --require-approval never"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.127.0",
