@@ -113,10 +113,3 @@ test('Bucket and distribution for the sub-domain (www) are created', () => {
     },
   })
 })
-
-test('Outputs are correctly synthesized', () => {
-  const assert = Template.fromStack(synthStack())
-
-  assert.hasOutput('distUrl', {})
-  assert.hasOutput('distWwwUrl', {})
-})
