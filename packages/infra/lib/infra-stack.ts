@@ -84,7 +84,7 @@ export class InfraStack extends cdk.Stack {
       }
     )
 
-    const dist = new cdn.CloudFrontWebDistribution(this, 'portfolioCDN', {
+    new cdn.CloudFrontWebDistribution(this, 'portfolioCDN', {
       priceClass: cdn.PriceClass.PRICE_CLASS_100,
       defaultRootObject: '',
       viewerCertificate: {
@@ -154,7 +154,7 @@ export class InfraStack extends cdk.Stack {
       })
     )
 
-    const dist = new cdn.CloudFrontWebDistribution(this, 'portfolioWwwCDN', {
+    new cdn.CloudFrontWebDistribution(this, 'portfolioWwwCDN', {
       priceClass: cdn.PriceClass.PRICE_CLASS_100,
       viewerCertificate: {
         aliases: [domain.www],
