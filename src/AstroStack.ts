@@ -4,7 +4,7 @@ import { Stack } from 'sst/constructs';
 
 export function AstroStack({ stack }: { stack: Stack }) {
   const fixSubPages = new Function(stack, 'fixSubPages', {
-    handler: 'sst/fixSubPages.handler',
+    handler: 'src/sst/fixSubPages.handler',
   });
 
   const site = new StaticSite(stack, 'site', {
