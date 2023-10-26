@@ -1,7 +1,5 @@
 /**
  * Site metadata that is used across the site.
- *
- * A few of these are not used yet, and are subject to change, example of this is Author.
  */
 export const SITE_METADATA = {
   title: 'Ryan Dsouza',
