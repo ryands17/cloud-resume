@@ -3,12 +3,14 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "sst bind astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "sst:deploy": "sst deploy",
+    "sst:dev": "sst dev"
   },
   "dependencies": {
     "@astrojs/mdx": "^1.0.3",
@@ -23,12 +25,22 @@
     "@tailwindcss/typography": "^0.5.10",
     "prettier": "^3.0.3",
     "prettier-plugin-astro": "^0.12.1",
-    "sharp": "^0.32.6"
+    "sharp": "^0.32.6",
+    "sst": "^2.32.1",
+    "aws-cdk-lib": "2.95.1",
+    "constructs": "10.2.69",
+    "astro-sst": "^2.32.1",
+    "husky": "^8.0.0"
   },
   "prettier": {
     "singleQuote": true,
     "plugins": [
       "prettier-plugin-astro"
+    ]
+  },
+  "lint-staged": {
+    "*.{ts, astro, cjs, mjs, js, mdx, md, css}": [
+      "prettier --write"
     ]
   }
 }
