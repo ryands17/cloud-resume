@@ -13,6 +13,8 @@ jobs:
   build:
     env:
       SST_TELEMETRY_DISABLED: '1'
+      STACK_ENV: 'prod'
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,4 +42,4 @@ jobs:
         run: pnpm build
 
       - name: Deploy app
-        run: pnpm sst:deploy --stage prod
+        run: pnpm sst:deploy --stage $STACK_ENV

@@ -1,14 +1,10 @@
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import { StaticSite } from 'sst/constructs';
-import {
-  FunctionEventType,
-  Function,
-  FunctionCode,
-} from 'aws-cdk-lib/aws-cloudfront';
 import { Stack } from 'sst/constructs';
 
 const code = `function handler(event) {
-  let request = event.request;
-  let uri = request.uri;
+  var request = event.request;
+  var uri = request.uri;
 
   // Check whether the URI is missing a file name.
   if (uri.endsWith('/')) {
@@ -23,8 +19,8 @@ const code = `function handler(event) {
 }`;
 
 export function AstroStack({ stack }: { stack: Stack }) {
-  const fixSubPages = new Function(stack, 'fixSubPages', {
-    code: FunctionCode.fromInline(code),
+  const fixSubPages = new cloudfront.Function(stack, 'fixSubPages', {
+    code: cloudfront.FunctionCode.fromInline(code),
     comment: 'To redirect to the correct page in Astro',
     functionName: 'fixSubPages',
   });
@@ -37,7 +33,7 @@ export function AstroStack({ stack }: { stack: Stack }) {
           functionAssociations: [
             {
               function: fixSubPages,
-              eventType: FunctionEventType.VIEWER_REQUEST,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
             },
           ],
         },
