@@ -1,5 +1,7 @@
 # Cloud Resume
 
+![Build status](https://github.com/github/cloud-resume/actions/workflows/build.yaml/badge.svg)
+
 This is an [Astro](https://astro.build/), [Tailwind CSS](https://tailwindcss.com/) blogging resume/portfolio.
 
 ## Infrastructure as Code (SST TypeScript)
