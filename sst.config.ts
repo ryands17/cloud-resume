@@ -1,19 +1,14 @@
+import { AstroStack } from '@/AstroStack';
 import type { SSTConfig } from 'sst';
-import { AstroSite } from 'sst/constructs';
 
 export default {
   config(_input) {
     return {
       name: 'cloud-resume',
-      region: 'us-east-1',
+      region: 'eu-west-1',
     };
   },
   stacks(app) {
-    app.stack(function Site({ stack }) {
-      const site = new AstroSite(stack, 'site');
-      stack.addOutputs({
-        url: site.url,
-      });
-    });
+    app.stack(AstroStack);
   },
 } satisfies SSTConfig;

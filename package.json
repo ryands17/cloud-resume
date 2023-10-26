@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "prepare": "husky install",
+    "sst:build": "sst build",
     "sst:deploy": "sst deploy",
     "sst:dev": "sst dev"
   },
