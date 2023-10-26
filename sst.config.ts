@@ -22,6 +22,7 @@ export default {
   },
   stacks(app) {
     app.stack(AstroStack);
+    app.setDefaultRemovalPolicy('destroy');
 
     Tags.of(app).add('version', packageJson.version);
     Tags.of(app).add('environment', process.env.STACK_ENV || 'dev');
