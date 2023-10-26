@@ -1,6 +1,6 @@
 # Cloud Resume
 
-![Build status](https://github.com/github/cloud-resume/actions/workflows/build.yaml/badge.svg)
+[![Build and Deploy](https://github.com/ryands17/cloud-resume/actions/workflows/build.yaml/badge.svg)](https://github.com/ryands17/cloud-resume/actions/workflows/build.yaml)
 
 This is an [Astro](https://astro.build/), [Tailwind CSS](https://tailwindcss.com/) blogging resume/portfolio.
 
