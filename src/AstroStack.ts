@@ -52,6 +52,7 @@ export function AstroStack({ stack }: { stack: Stack }) {
     customDomain: {
       domainName: domain,
       alternateNames: [`www.${domain}`],
+      isExternalDomain: true,
       cdk: {
         certificate: acm.Certificate.fromCertificateArn(
           stack,
