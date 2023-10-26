@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   build:
+    env:
+      SST_TELEMETRY_DISABLED: '1'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -38,5 +40,4 @@ jobs:
         run: pnpm build
 
       - name: Deploy app
-        # run: pnpm sst:deploy --stage prod
-        run: pnpm sst:build --stage prod
+        run: pnpm sst:deploy --stage prod
