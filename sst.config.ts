@@ -1,4 +1,4 @@
-import { AstroStack } from '@/AstroStack';
+import { AstroStack, GlobalStack } from '@/AstroStack';
 import { Tags, Aspects, type IAspect } from 'aws-cdk-lib/core';
 import { type IConstruct } from 'constructs';
 import packageJson from './package.json';
@@ -15,15 +15,20 @@ class AutoPublishCloudFrontFunctions implements IAspect {
 
 export default {
   config(_input) {
-    return { name: 'cloud-resume', region: 'eu-west-1' };
+    return { name: 'cloud-resume' };
   },
   stacks(app) {
-    app.stack(AstroStack);
-    app.setDefaultRemovalPolicy('destroy');
+    if (app.region === 'us-east-1') {
+      app.stack(GlobalStack);
+    }
+
+    if (app.region === 'eu-west-1') {
+      app.stack(AstroStack);
+      app.setDefaultRemovalPolicy('destroy');
+      Aspects.of(app).add(new AutoPublishCloudFrontFunctions());
+    }
 
     Tags.of(app).add('version', packageJson.version);
     Tags.of(app).add('environment', process.env.STACK_ENV || 'dev');
-
-    Aspects.of(app).add(new AutoPublishCloudFrontFunctions());
   },
 } satisfies SSTConfig;

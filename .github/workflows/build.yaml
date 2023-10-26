@@ -41,5 +41,8 @@ jobs:
       - name: Build Astro site
         run: pnpm build
 
+      - name: Deploy global stack
+        run: pnpm sst:deploy --stage $STACK_ENV --region us-east-1
+
       - name: Deploy app
-        run: pnpm sst:deploy --stage $STACK_ENV
+        run: pnpm sst:deploy --stage $STACK_ENV --region eu-west-1
