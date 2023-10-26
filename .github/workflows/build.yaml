@@ -1,5 +1,6 @@
 name: Build and Deploy
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -26,12 +27,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v2
-      #   with:
-      #     role-to-assume: ${{secrets.AWS_ROLE_ARN}}
-      #     role-duration-seconds: 14390
-      #     aws-region: eu-west-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{secrets.AWS_ROLE_ARN}}
+          role-duration-seconds: 14390
+          aws-region: eu-west-1
 
-      # - name: Deploy app
-      #   run: pnpm sst:deploy --stage prod
+      - name: Deploy app
+        # run: pnpm sst:deploy --stage prod
+        run: pnpm sst:build --stage prod
