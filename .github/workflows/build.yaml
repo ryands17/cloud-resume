@@ -31,7 +31,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{secrets.AWS_ROLE_ARN}}
-          role-duration-seconds: 14390
+          role-duration-seconds: 3600
           aws-region: eu-west-1
 
       - name: Deploy app
