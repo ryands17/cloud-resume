@@ -1,0 +1,6 @@
+Sitemap: https://www.ryan17.dev/sitemap-index.xml
+
+User-agent: *
+Allow: /*
+
+Disallow: /api/*
