@@ -34,6 +34,9 @@ jobs:
           role-duration-seconds: 3600
           aws-region: eu-west-1
 
+      - name: Build Astro site
+        run: pnpm build
+
       - name: Deploy app
         # run: pnpm sst:deploy --stage prod
         run: pnpm sst:build --stage prod
