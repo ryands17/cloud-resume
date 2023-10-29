@@ -32,7 +32,8 @@
     "prettier": "^3.0.3",
     "prettier-plugin-astro": "^0.12.1",
     "sharp": "^0.32.6",
-    "sst": "^2.32.1"
+    "sst": "^2.32.1",
+    "typescript": "^5.2.2"
   },
   "prettier": {
     "singleQuote": true,
