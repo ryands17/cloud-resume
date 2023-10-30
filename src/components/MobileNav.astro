@@ -61,7 +61,6 @@ import { NAVIGATION } from '@/consts';
     });
 
     function onToggleNav() {
-      console.log('check click');
       const isNavHidden = document.body.style.overflow === '';
       mobileMenuContainer?.classList.toggle('translate-x-full', !isNavHidden);
       mobileMenuContainer?.classList.toggle('translate-x-0', isNavHidden);
