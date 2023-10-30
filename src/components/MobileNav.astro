@@ -52,17 +52,24 @@ import { NAVIGATION } from '@/consts';
 </div>
 
 <script>
-  const mobileToggleButton = document.querySelectorAll('.toggle-menu');
-  const mobileMenuContainer = document.querySelector('#mobileMenuContainer');
+  function setupHamburgerMenuToggle() {
+    const mobileToggleButton = document.querySelectorAll('.toggle-menu');
+    const mobileMenuContainer = document.querySelector('#mobileMenuContainer');
 
-  mobileToggleButton.forEach((button) => {
-    button.addEventListener('click', () => onToggleNav());
-  });
+    mobileToggleButton.forEach((button) => {
+      button.addEventListener('click', () => onToggleNav());
+    });
 
-  function onToggleNav() {
-    const isNavHidden = document.body.style.overflow === '';
-    mobileMenuContainer?.classList.toggle('translate-x-full', !isNavHidden);
-    mobileMenuContainer?.classList.toggle('translate-x-0', isNavHidden);
-    document.body.style.overflow = isNavHidden ? 'hidden' : '';
+    function onToggleNav() {
+      console.log('check click');
+      const isNavHidden = document.body.style.overflow === '';
+      mobileMenuContainer?.classList.toggle('translate-x-full', !isNavHidden);
+      mobileMenuContainer?.classList.toggle('translate-x-0', isNavHidden);
+      document.body.style.overflow = isNavHidden ? 'hidden' : '';
+    }
   }
+
+  document.addEventListener('astro:page-load', () => {
+    setupHamburgerMenuToggle();
+  });
 </script>
