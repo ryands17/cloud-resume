@@ -3,8 +3,7 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { StaticSite } from 'sst/constructs';
-import { Stack } from 'sst/constructs';
+import { Stack, StaticSite } from 'sst/constructs';
 
 const acmArnPath = '/portfolio/acmCertArn';
 const domain = 'ryan17.dev';
