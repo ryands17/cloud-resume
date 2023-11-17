@@ -1,6 +1,6 @@
 ---
-title: TodoMVC with HTMX and Hyperscript
-date: '2023-11-13'
+title: TodoMVC with HTMX and Hyperscript - Part 1
+date: '2023-11-17'
 tags: ['htmx', 'node']
 draft: false
 summary: A introduction to HTMX and Hyperscript with a simple TodoMVC example served with Node and Express
@@ -16,8 +16,8 @@ I've recently started dabbling with [HTMX](https://htmx.org/) and [Hyperscript](
 <Image
   src={htmxIntro}
   alt="motivation behind creating HTMX"
-  width={400}
-  height={400}
+  width={500}
+  height={500}
 />
 
 ## Why HTMX
@@ -29,19 +29,19 @@ What we generally follow when creating webapps is as follows:
 - Send data in the form of JSON
 - Construct HTML with that JSON
 
-HTMX simplifies the step by removing the second part which would look like this:
+HTMX simplifies the step by removing the JSON part which would look like this:
 
 - Create an API
-- Use HTMX attributes to call API's directly (done via AJAX)
-- Directly send the updated HTML
+- Use HTMX attributes to call API's directly (via AJAX)
+- Send the updated HTML directly
 
 ## Creating a Todo app
 
-For those who want to follow along, you can clone and run [this repo](https://github.com/ryands17/htmx-todomvc) locally. The CSS has been taken directly from a sample TODOMVC app and in the `public` folder.
+For those who want to follow along, you can clone and run [this repo](https://github.com/ryands17/htmx-todomvc) locally. The CSS has been taken directly from a sample TODOMVC app and is in the `public` folder.
 
 ### Listing todos
 
-Let's start by creating an array that holds a list of todos. We will be keeping the todos in-memory for now and in a later post, I'll show you how to connect this to a database like DynamoDB.
+Let's start by creating an array that holds a list of todos. We will be keeping the todos in-memory for now and in a later post, we'll look at connecting this to a database like DynamoDB.
 
 ```ts
 import { z } from 'zod';
@@ -61,7 +61,7 @@ const db: schemas.Todo[] = [
 ];
 ```
 
-Here we are using [Zod](https://zod.dev/) to create a Todo schema so that we have compile-time and runtime validation. We need three fields:
+Here we are using [Zod](https://zod.dev/) to create a Todo schema so that we have compile-time and runtime validation. We require three fields:
 
 - `id`: A string but automatically is defaulted to a UUID
 - `text`: Also a string but it shouldn't be empty and Zod here handles the validation
@@ -69,7 +69,7 @@ Here we are using [Zod](https://zod.dev/) to create a Todo schema so that we hav
 
 I have added a couple of Todos to my liking to be displayed once we start our server. Let's also create an HTML Layout that will be sent on page load.
 
-Personally, I love components and JSX is simply amazing! It helps us write components in a type-safe manner instead of using a template like EJS or Handlebars. We will be using [KitaJS HTML](https://github.com/kitajs/html) which helps us wrtie JSX without React and renders as a string which we can directly send back to the client. How cool is that!
+Personally, I love components and JSX is simply amazing! It helps us write components in a type-safe manner instead of using a template like EJS or Handlebars. We will be using [KitaJS HTML](https://github.com/kitajs/html) which helps us wrtie JSX without React and renders as a string which we can directly send back to the client. How cool is that 😃
 
 Here's the Base HTML component that we will be sending:
 
@@ -87,7 +87,8 @@ export function BaseHtml({ children }: html.PropsWithChildren) {
   </head>
   ${children}
   <script>
-    htmx.config.globalViewTransitions = true
+    htmx.config.globalViewTransitions = true;
+    htmx.config.useTemplateFragments = true;
   </script>
   </html>
 `;
@@ -167,7 +168,7 @@ app.get('/', (req, res) => {
 });
 ```
 
-The above is a basic skeleton in which we will be adding HTMX directives to to perform CRUD operations on our todos
+The above is a basic skeleton in which we will be adding HTMX directives to to perform CRUD operations on our todos. We send this via `res.send` from Express.
 
 Now let's create an API that will be consumed by HTMX to return this list:
 
@@ -184,20 +185,35 @@ app.get('/todos', (req, res) => {
 
   switch (filter) {
     case 'all':
-      return res.send(<TodoList todos={db} />);
+      return res.send(
+        <>
+          <TodoList todos={db} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
     case 'active': {
       const todos = db.filter((todo) => !todo.completed);
-      return res.send(<TodoList todos={todos} />);
+      return res.send(
+        <>
+          <TodoList todos={todos} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
     }
     case 'completed': {
       const todos = db.filter((todo) => todo.completed);
-      return res.send(<TodoList todos={todos} />);
+      return res.send(
+        <>
+          <TodoList todos={todos} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
     }
   }
 });
 ```
 
-Here we create a `/todos` endpoint that accepts a filter in the form of `active`, `completed`, or `all`. We use Zod here so that if a filter isn't passed, we default to `all`. The logic is a simple switch case where we just filter the todos based on the `completed` boolean. There's also a `<TodoList />` component that we return here. This is the power of HTMX, we can directly return HTML and that will be displayed where we want it to :)
+Here we create a `/todos` endpoint that accepts a filter in the form of `active`, `completed`, or `all`. We use Zod here so that if a filter isn't passed, we default to `all`. The logic is a simple switch case where we just filter the todos based on the `completed` boolean. There's also a `<TodoList />` component that we return here. This is the power of HTMX, we can just return HTML that will be displayed where we want it to 😃
 
 ```tsx
 import { clsx } from 'clsx';
@@ -241,11 +257,25 @@ export function TodoItem({ todo }: { todo: Todo }) {
     </li>
   );
 }
+
+export function TodoCount({ count }: { count: number }) {
+  const todoText = count === 1 ? 'todo' : 'todos';
+
+  return (
+    <span>
+      <strong>{count}</strong> {todoText} left
+    </span>
+  );
+}
 ```
 
-In the above code, create a `TodoList` component that accepts a list of todos as props coming from our `/todos` API. We also create a `TodoItem` component that will render each individual todo with some classes applied. We are using `clsx` here for easy readability of adding multiple classes
+In the above snippet, we create have three components:
 
-Let's modify the `/` express route to add HTMX directives and fetch our todos with the count in the footer:
+- A `TodoList` component that accepts a list of todos as props coming from our `/todos` API
+- A `TodoItem` component that will render each individual todo with some classes applied. We are using `clsx` here for easy readability and simplicity of adding multiple classes
+- A `TodoCount` component that displays the count of remaining todos
+
+Let's modify the `/` endpoint to sprinkle in some HTMX directives and fetch our todos with the count in the footer:
 
 ```tsx
 app.get('/', (req, res) => {
@@ -282,39 +312,41 @@ Here, we add some `hx` directives that and here's what they do:
 - `hx-target`: Where do we want to put the returned HTML. This is in an element with the class named `header`. You can use CSS selectors as I have here
 - `hx-swap`: Where exactly should the element be put in the target. `afterend` means that this will be appended after the `.header` element i.e. as a sibling. [Here](https://htmx.org/docs/#swapping) is a list of options for `hx-swap`
 
-Now let's create an API and fetch the data to fetch remaining todos for the `footer` in the same manner.
+import todoCountIncorrectUI from '@/content/blog/images/todocount-incorrect-ui.png';
 
-Here's the API:
+The todo list is displayed correctly, but we can see that the count isn't:
+
+<Image
+  src={todoCountIncorrectUI}
+  alt="the todo count is placed incorrectly"
+  width={500}
+  height={500}
+/>
+
+To fix this, we need to perform an Out Of Band (OOB) update. Which means that we need to tell HTMX that apply this HTML to another place in the markup. The way we do this is by adding the [hx-swap-oob](https://htmx.org/attributes/hx-swap-oob/) attribute as follows:
 
 ```tsx
-app.get('/count', (_req, res) => {
-  const uncheckedTodoCount = db.filter((todo) => !todo.completed).length;
-  const todoText = uncheckedTodoCount === 1 ? 'todo' : 'todos';
+export function TodoCount({ count }: { count: number }) {
+  const todoText = count === 1 ? 'todo' : 'todos';
 
-  res.send(
-    <span>
-      <strong>{uncheckedTodoCount}</strong> {todoText} left
-    </span>,
+  return (
+    <span hx-swap-oob="innerHTML:#todo-count">
+      <strong>{count}</strong> {todoText} left
+    </span>
   );
-});
+}
 ```
 
-And we add it to the footer in the following manner:
+This will tell HTMX to replace this component in the **innerHTML** of the element that has the ID **todo-count**. Now we can see that the todos are displayed correctly 🎉
 
-```tsx
-<footer
-  class="footer"
-  hx-get="/count"
-  hx-trigger="load"
-  hx-target=".todo-count"
-  hx-swap="innerHTML"
->
-  <span class="todo-count" />
-  ...rest of the HTML/JSX
-</footer>
-```
+import todoCountCorrectUI from '@/content/blog/images/todocount-correct-ui.png';
 
-We perform the same action here. A GET request to the `/count` API, trigger on load and swap the internals of the entire `.todo-count` element (a `span` here in this case)
+<Image
+  src={todoCountCorrectUI}
+  alt="the todo count is placed in the correct position"
+  width={500}
+  height={500}
+/>
 
 ### Adding a todo
 
@@ -363,21 +395,27 @@ What we do here is parse the request body with Zod and return a new `<TodoItem/>
 />
 ```
 
-What do these directives to again:
+Here's what each of these directives do:
 
-- `hx-post`: Send a POST request to the `/todo` endpoint and pass the value from the `input` field. How does HTMX know what should the key of the field be? This is defined using the `name` attribute on the `input` element and HTMX automatically sends to the endpoint along with the value
-- `hx-trigger`: This is a special one. We want to submit when the user presses the **Enter** key. HTMX uses the `keyup` event and we specify that only trigger the API when the key code matches the **Enter** key, which is _13_ in this case
+- `hx-post`: Send a POST request to the `/todo` endpoint and pass the value from the `input` field. How does HTMX know what should the name of the field be? Simple! It looks at the `name` attribute on the `input` element and automatically sends to the endpoint along with the value
+- `hx-trigger`: This is a special one. We want to submit when the user presses the **Enter** key. HTMX uses the browser native `keyup` event and we specify that only trigger the API when the key code matches the **Enter** key, which is _13_ in this case
 - `hx-target`: We want to add this to the `.todo-list` section so we specify that here
 - `hx-swap`: We want to append this new todo at the end of the list, so we use `beforeend` here
 
-Once, this is implemented, you'll see the new todo added! This looks so simple and clean! But notice that we have a couple of problems with this:
+Once, this is implemented, you'll see the new todo added! This looks so simple and clean! But notice that we have a minor problem:
 
-- The text in the input is not cleared after the new todo is created
-- The todo count in the footer isn't updated after adding a new todo
+import todoInputNotCleared from '@/content/blog/images/todo-input-not-cleared.png';
 
-Let's see how HTMX and Hyperscript provide us with simple solutions to this:
+<Image
+  src={todoInputNotCleared}
+  alt="todo input isn't cleared after submitting a new todo"
+  width={500}
+  height={500}
+/>
 
-To clear the input field, we can use Hyperscript which we added as a script in our HTML. Hyperscript provides a special HTML attribute as an `underscore` where we can add some custom client side logic. Let's see how we can clear the input field after a new todo is added:
+The text in the input is not cleared after the new todo is created. Here's where Hyperscript comes into the picture. Let's see how HTMX and Hyperscript provide us with a simple solution to this:
+
+To clear the input field, we can use Hyperscript which we added as a script in our base HTML. Hyperscript provides a special HTML attribute as an `underscore` where we can add some human-readable client side logic without writing JavaScript. Let's see how we can clear the input field after a new todo is added:
 
 ```tsx
 <input
@@ -393,34 +431,211 @@ To clear the input field, we can use Hyperscript which we added as a script in o
 />
 ```
 
-The final `_` attribute is just what we need! This reads as: "Set the current element's value to an empty string after the `htmx:afterOnLoad` event i.e. after the the new response has been added". HTMX provides us with a custom set of events and we can directly use them in our client side code. As you can see here, Hyperscript makes us write readable client side logic for which we would need to write JavaScript in a separate script tag. This is what's so cool about combining HTMX and Hyperscript. You never need to write your own custom JavaScript for such operations :)
+The final `_` attribute is just what we need! This reads as: "Set the current element's value to an empty string after the `htmx:afterOnLoad` event i.e. after the the new response has been added". HTMX provides us with a [custom set of events](https://htmx.org/reference/#events) and we can directly reference them in our client side code. Hyperscript makes us write readable client side logic for which we would have to write JavaScript in a separate script tag. This is what's so cool about combining HTMX and Hyperscript. You never need to write your own custom JavaScript for operations like these 🙂
 
-The second problem also needs HTMX events. We would need to create a custom event and make sure that the footer fetches new data again after a new todo is added. Here's how we can add a custom event in HTMX:
+### Deleting a todo
+
+Deleting a todo is also easy. We have the `x` button here that we use to delete a todo:
+
+import todoDeleteIcon from '@/content/blog/images/todo-delete-icon.png';
+
+<Image
+  src={todoDeleteIcon}
+  alt="todo delete button on the right side of the text"
+  width={500}
+  height={500}
+/>
+
+Again, we need to use HTMX attributes on the delete button to remove that todo:
 
 ```tsx
-<footer
-  class="footer"
-  hx-get="/count"
-  hx-trigger="load, todoUpdate from:body"
-  hx-target=".todo-count"
-  hx-swap="innerHTML"
->
-  <span class="todo-count" />
-</footer>
+<button
+  class="destroy"
+  hx-post={`/todos/${todo.id}`}
+  hx-target="closest li"
+  hx-swap="outerHTML"
+/>
 ```
 
-The `hx-trigger` contains a new event apart from `load`. We have created a custom event called `todoUpdate` which will bubble up to the body. This makes sure that when HTMX detects a `todoUpdate` event, it will fire the GET request to render the unread todos count. But how does HTMX know about this **todoUpdate** event? This is how:
+Let's see what the HTMX attributes mean:
+
+- `hx-post`: Perform a POST request on the `/todos/:id` endpoint
+- `hx-target`: Match the closest `<li />` tag, which is the entire todo
+- `hx-swap`: Use `outerHTML` to replace the entire `<li />` tag
+
+And here's the corresponding endpoint:
 
 ```tsx
-app.post('/todo', (req, res) => {
-  const todo = schemas.TodoSchema.parse(req.body);
-  db.push(todo);
+app.post(`/todos/:id`, (req, res) => {
+  const TodoOperationParamsSchema = z.object({ id: z.string() });
+  const params = TodoOperationParamsSchema.parse(req.params);
 
-  res.setHeader('HX-Trigger', 'todoUpdate');
-  res.send(<TodoItem todo={todo} />);
+  const todoIndex = db.findIndex((val) => val.id === params.id);
+  if (todoIndex !== -1) {
+    db.splice(todoIndex, 1);
+  }
+  const remainingTodoCount = fetchRemainingTodoCount();
+
+  res.send(<TodoCount count={remainingTodoCount} />);
 });
 ```
 
-Notice the `setHeader` on our response. We need to pass in a header named `HX-Trigger` and the value will be set to `todoUpdate`. When HTMX receives a response with this header, it will update all the places where this **todoUpdate** event is present in the `hx-trigger` attribute 🤯
+What we do above is return nothing for the closest `<li />` tag so that it is deleted and just return the `<TodoCount />` with the updated footer count of remaining todos. This makes sure that our todo is deleted and the count in the footer is updated correctly.
 
-[Here's](https://htmx.org/docs/#response-headers) the list of headers you can send in the response and HTMX will detect them
+### Toggling a todo
+
+This is similar to adding a todo but instead of a text field, we have a checkbox. Repeating, let's add some HTMX attributes:
+
+```tsx
+<input
+  class="toggle"
+  type="checkbox"
+  checked={todo.completed}
+  hx-post={`/todos/toggle/${todo.id}`}
+  hx-target="closest li"
+  hx-swap="outerHTML"
+/>
+```
+
+Here's how it works:
+
+- `hx-post`: Perform a POST request to the `/todos/toggle/:id` passing in the **ID** of the todo
+- `hx-target`: Again, let's select the closest `<li />` which contains the entire todo
+- `hx-swap`: Use `outerHTML` again to replace the entire todo
+
+The corresponding endpoint would look like:
+
+```tsx
+app.post('/todos/toggle/:id', (req, res) => {
+  const TodoOperationParamsSchema = z.object({ id: z.string() });
+  const todo = db.find((val) => val.id === params.id);
+
+  if (todo) {
+    todo.completed = !todo.completed;
+    const remainingTodoCount = fetchRemainingTodoCount();
+
+    res.send(
+      <>
+        <TodoItem todo={todo} />
+        <TodoCount count={remainingTodoCount} />
+      </>,
+    );
+  }
+});
+```
+
+In the above snippet, we find the todo by ID and if it exists, we toggle the `completed` property and return the updated `<TodoItem />` and `<TodoCount>`.
+
+This is how it would look like with the checked item and updated count in the footer:
+
+import toggleTodo from '@/content/blog/images/toggle-a-todo.png';
+
+<Image
+  src={toggleTodo}
+  alt="toggling a todo updates the checkbox and footer count"
+  width={500}
+  height={500}
+/>
+
+### Updating a todo
+
+This is something that requires client side JavaScript so that we can perform operations like:
+
+- Double clicking a todo text replaces it with an input element with the todo text to update
+- Pressing the **Enter** key updates the todo text
+- Pressing the **Escape** key aborts the editing
+
+We will again write use Hyperscript to perform the above operations easily and submit the updated todo text using HTMX. This is how the toggle would look like in the `<TodoItem />` component:
+
+```tsx
+export function TodoItem({ todo }: { todo: Todo }) {
+  return (
+    <li
+      class={clsx({
+        completed: todo.completed,
+        editing: false,
+      })}
+    >
+      <div class="view">
+        <input
+          class="toggle"
+          type="checkbox"
+          checked={todo.completed}
+          hx-post={`/todos/toggle/${todo.id}`}
+          hx-target="closest li"
+          hx-swap="outerHTML"
+        />
+        <label safe _="on dblclick add .editing to the closest parent <li/>">
+          {todo.text}
+        </label>
+        <button
+          class="destroy"
+          hx-post={`/todos/${todo.id}`}
+          hx-target="closest li"
+          hx-swap="outerHTML"
+        />
+      </div>
+      <input
+        class="edit"
+        name="todoText"
+        value={todo.text}
+        _="on keyup[key is 'Escape'] remove .editing from the closest parent <li/>"
+        hx-put={`/todos/${todo.id}`}
+        hx-trigger="keyup[keyCode==13]"
+        hx-target="closest li"
+        hx-swap="outerHTML"
+      />
+    </li>
+  );
+}
+```
+
+Let's break the Hyperscript attributes down first:
+
+The `_` attribute on the `<label />` element says that on the native double-click event, add a class named `editing` to the parent `<li />` tag. This makes sure that editing is turned on and we see an input box with out todo filled out like this:
+
+import todoEditBox from '@/content/blog/images/todo-edit-box.png';
+
+<Image
+  src={todoEditBox}
+  alt="show the input element with the todo text on double click"
+  width={500}
+  height={500}
+/>
+
+Then on the `<input />` field with the `name` attribute set to **todoText**, we add another Hyperscript `_` attribute which says that if the **Escape** key is pressed, remove the `editing` class from the parent `<li />` and return it back to the normal state. See how easy to read this is compared to writing custom JavaScript 😃
+
+On the same `<input />` element, we add HTMX attributes to update the todo. Here's what they do:
+
+- `hx-put`: Perform a PUT request on `/todos/:id` passing in the ID of the todo
+- `hx-trigger`: This endpoint should only be called when the Enter key is pressed (key code **13**)
+- `hx-target`: Update the closest `<li />` which is the `<TodoItem />` component
+- `hx-swap`: Use outerHTML to update the entire todo
+
+The endpoint for the above will look like this:
+
+```tsx
+app.put('/todos/:id', (req, res) => {
+  const EditTodoSchema = z.object({
+    todoText: z.string().trim(),
+  });
+  const TodoOperationParamsSchema = z.object({ id: z.string() });
+
+  const { todoText } = EditTodoSchema.parse(req.body);
+  const params = TodoOperationParamsSchema.parse(req.params);
+
+  const todo = db.find((val) => val.id === params.id);
+  if (todo) {
+    todo.text = todoText;
+    res.send(<TodoItem todo={todo} />);
+  }
+});
+```
+
+In the above snippet, we get the ID of the todo from the params and HTMX automatically sends the edited text in the `todoText` field as that was the name of our `<input />` element. We then update the todo text and send the `<TodoItem />` with the updated todo. Notice here we don't need to update the footer count as we're not toggling the completion status on the todo. HTMX makes things simple to think and implement.
+
+Yay! We completed CRUD for our Todo app 🎉
+
+Thinking in HTMX requires a paradigm shift from frameworks like React, Vue and it's fun when you can directly return HTML back to the browser (**the OG SSR way**) by not sacrificing the benefits of JSX! HTMX directives mixed with a pinch of custom JS via Hyperscript makes web dev fun again!
+
+I hope you liked the post, follow me on LinkedIn and Twitter for where I will continue posting about this series. The next part will include a persistent database like DynamoDB so that the todos aren't lost on server restart. Happy HTMXing 😃
