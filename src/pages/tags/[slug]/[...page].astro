@@ -1,5 +1,6 @@
 ---
-import { type Page, getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { GetStaticPathsOptions, Page } from 'astro';
 
 import { ITEMS_PER_PAGE } from '@/consts';
 import { excludeDrafts, sortBlogPosts } from '@/functions';
@@ -11,7 +12,11 @@ interface Props {
   entry: CollectionEntry<'tags'>;
 }
 
-export async function getStaticPaths({ paginate }) {
+export async function getStaticPaths({
+  paginate,
+}: {
+  paginate: GetStaticPathsOptions['paginate'];
+}) {
   const tags = await getCollection('tags');
   const posts = await getCollection('blog', excludeDrafts).then(sortBlogPosts);
 

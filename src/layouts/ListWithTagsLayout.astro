@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection } from 'astro:content';
+import type { Page } from 'astro';
 
 import Link from '../components/Link.astro';
 import Pagination from '../components/Pagination.astro';
@@ -10,7 +11,7 @@ import FormattedDate from '../components/FormattedDate.astro';
 interface Props {
   title: string;
   description: string;
-  page: CollectionEntry<'blog'>[];
+  page: Page<CollectionEntry<'blog'>>;
 }
 
 const tags = await getCollection('tags');
@@ -89,43 +90,38 @@ const isBlogPage = Astro.url.pathname.startsWith('/blog');
       <div>
         <ul>
           {
-            page.data.map(
-              ({
-                slug,
-                data: { date, title, summary, tags },
-              }: CollectionEntry<'blog'>) => (
-                <li class="py-5">
-                  <article class="space-y-2 flex flex-col xl:space-y-0">
-                    <dl>
-                      <dt class="sr-only">Published on</dt>
-                      <dd class="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                        <FormattedDate date={date} />
-                      </dd>
-                    </dl>
-                    <div class="space-y-3">
-                      <div>
-                        <h3 class="text-2xl font-bold leading-8 tracking-tight">
-                          <Link
-                            href={`/blog/${slug}`}
-                            class="text-gray-900 dark:text-gray-100"
-                          >
-                            {title}
-                          </Link>
-                        </h3>
-                        <div class="flex flex-wrap">
-                          {tags.map(({ slug }) => (
-                            <Tag slug={slug} />
-                          ))}
-                        </div>
-                      </div>
-                      <div class="prose max-w-none text-gray-500 dark:text-gray-400">
-                        {summary}
+            page.data.map(({ slug, data: { date, title, summary, tags } }) => (
+              <li class="py-5">
+                <article class="space-y-2 flex flex-col xl:space-y-0">
+                  <dl>
+                    <dt class="sr-only">Published on</dt>
+                    <dd class="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
+                      <FormattedDate date={date} />
+                    </dd>
+                  </dl>
+                  <div class="space-y-3">
+                    <div>
+                      <h3 class="text-2xl font-bold leading-8 tracking-tight">
+                        <Link
+                          href={`/blog/${slug}`}
+                          class="text-gray-900 dark:text-gray-100"
+                        >
+                          {title}
+                        </Link>
+                      </h3>
+                      <div class="flex flex-wrap">
+                        {tags.map(({ slug }) => (
+                          <Tag slug={slug} />
+                        ))}
                       </div>
                     </div>
-                  </article>
-                </li>
-              ),
-            )
+                    <div class="prose max-w-none text-gray-500 dark:text-gray-400">
+                      {summary}
+                    </div>
+                  </div>
+                </article>
+              </li>
+            ))
           }
         </ul>
         {(page.url.next || page.url.prev) && <Pagination page={page} />}

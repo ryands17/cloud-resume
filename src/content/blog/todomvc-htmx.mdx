@@ -1,17 +1,20 @@
 ---
 title: TodoMVC with HTMX and Hyperscript - Part 1
 date: '2023-11-17'
-tags: ['htmx', 'node']
+tags:
+  - htmx
+  - node
 draft: false
 summary: A introduction to HTMX and Hyperscript with a simple TodoMVC example served with Node and Express
 ---
 
 import { Image } from 'astro:assets';
-import htmxIntro from '@/content/blog/images/htmx-intro.png';
 
 ## Introduction
 
 I've recently started dabbling with [HTMX](https://htmx.org/) and [Hyperscript](https://hyperscript.org/) and I'm really in awe of its ease of use. You can think of HTMX as a Server Rendered app where you send just HTML back to the browser where HTMX handles that using API calls. It can be best described as shown on the HTMX page:
+
+import htmxIntro from '@/content/blog/images/htmx-intro.png';
 
 <Image
   src={htmxIntro}
