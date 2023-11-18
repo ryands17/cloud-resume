@@ -1,10 +1,10 @@
 ---
 title: Validating forms with HTMX and Zod
-date: '2023-11-17'
+date: '2023-11-19'
 tags:
   - htmx
   - node
-draft: true
+draft: false
 summary: How can we validate forms using HTMX and Zod using Express as our server
 ---
 
@@ -24,3 +24,293 @@ import htmxIntro from '@/content/blog/images/htmx-intro.png';
   width={500}
   height={500}
 />
+
+What we'll do here is create a registration form with two fields, `email` and `password`. Let's create the base HTML that will be served by the main `/` endpoint:
+
+```tsx
+function BaseHtml({ children }: html.PropsWithChildren) {
+  return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX forms</title>
+    <link rel="stylesheet" href="/static/index.css" />
+    <script src="/static/htmx@1.9.8.js"></script>
+    <script src="/static/hyperscript@0.9.12.js"></script>
+  </head>
+  ${children}
+  <script>
+    htmx.config.globalViewTransitions = true;
+    htmx.config.useTemplateFragments = true;
+  </script>
+  </html>
+`;
+}
+```
+
+The above snippet uses the library `@kitajs/html` where we can write JSX so our components use props and are type-safe. We include the HTMX and Hyperscript scripts and some HTMX configuration in a script. We have the `children` prop and this is what we'll pass as children to this component:
+
+```tsx
+app.get('/', (_req, res) => {
+  res.send(
+    <BaseHtml>
+      <body>
+        <div class="h-screen flex flex-col items-center justify-center">
+          <h2 class="text-3xl">Awesome app!</h2>
+          <div class="card card-compact w-96 bg-base-100 shadow-xl">
+            <div class="card-body">
+              <RegistrationForm />
+            </div>
+          </div>
+          <div id="registration-success" class="h-20">
+            <div
+              role="alert"
+              class="alert alert-success w-auto mt-2 invisible"
+            />
+          </div>
+        </div>
+      </body>
+    </BaseHtml>,
+  );
+});
+```
+
+We pass in the body with some [Tailwind](https://tailwindcss.com/) styles. Here the [DaisyUI](https://daisyui.com/) library is being used so that we can easily create components without writing a lot of Tailwind classes. We want a card like structure in which we want to display a form with email and password fields. As we're using JSX and components, we create a `<RegistrationForm />` component that will render the form.
+
+```tsx
+import { clsx } from 'clsx';
+
+type Errors = Record<string, { message: string }>;
+
+type RegistrationFormProps = {
+  username?: string;
+  password?: string;
+  errors?: Errors;
+};
+
+function RegistrationForm(props: ResistrationFormProps) {
+  return (
+    <div>
+      <h2 class="card-title">Register</h2>
+      <form hx-post="/register" hx-target="closest div" hx-swap="outerHTML">
+        <div class="form-control w-full max-w-xs">
+          <label class="label" for="email">
+            <span class="label-text">What is your email?</span>
+          </label>
+          <input
+            type="email"
+            placeholder="enter your email"
+            id="email"
+            name="email"
+            value={props.email}
+            class={clsx('input input-bordered w-full max-w-xs', {
+              'input-error': props.errors?.email,
+            })}
+            required
+          />
+          <p safe class="m-2 text-error h-4">
+            {props.errors?.email && props.errors.email.message}
+          </p>
+        </div>
+
+        <div class="form-control w-full max-w-xs">
+          <label class="label" for="password">
+            <span class="label-text">What is your password?</span>
+          </label>
+          <input
+            type="password"
+            placeholder="enter your password"
+            id="password"
+            name="password"
+            value={props.password}
+            class={clsx('input input-bordered w-full max-w-xs', {
+              'input-error': props.errors?.password,
+            })}
+            required
+          />
+          <p safe class="m-2 text-error h-4">
+            {props.errors?.password && props.errors.password.message}
+          </p>
+        </div>
+
+        <div class="mt-2 flex">
+          <button class="btn btn-primary" type="submit">
+            Register
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+```
+
+We have a `form` here with two input fields. These input fields also contain errors displayed below that will be returned by the login API if we enter invalid credentials. These errors are given to us by Zod in the `/register` endpoint which checks if the email is a valid email and the password is at least 8 characters. This is how it looks like if we run our app and open [http://localhost:3000](http://localhost:3000):
+
+import registrationForm from '@/content/blog/images/registration-form.png';
+
+<Image
+  src={registrationForm}
+  alt="The initial registration form with email and password fields"
+  width={500}
+  height={500}
+/>
+
+## Submitting the form
+
+Let's add some HTMX attributes on the form that will send a POST request to the `/register` endpoint. This will send the `email` and `password` fields in the body.
+
+```tsx
+<div>
+  <h2 class="card-title">Register</h2>
+  <form hx-post="/register" hx-target="closest div" hx-swap="outerHTML">
+    ...rest of the form fields and submit button
+  </form>
+</div>
+```
+
+Here's what these HTMX attributes do:
+
+- `hx-post`: Send a POST request to the `/register` endpoint. We will be adding this below
+- `hx-target`: Target the closest `div`, which is the one the encapsulates the form
+- `hx-swap`: outerHTML is used to replace the entire `div` with the response from the `/register` endpoint
+
+## The `/register` endpoint
+
+Let's move on to writing this endpoint the form submits, but before that, let's create the [Zod](https://zod.dev/) schema for the body of the `/register` request:
+
+```ts
+import { z } from 'zod';
+
+const RegisterBodySchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(8, 'Password should be a minimum of 8 characters'),
+});
+```
+
+The above schema makes sure that the `email` field is a valid email and the password is at least 8 characters. We also add custom error messages if they are not. Now we can write the `/register` endpoint that uses the above schema and returns HTML (or in our case JSX). We need to check for two conditions:
+
+- If the email and password are valid, show a success alert on the page instead of the form
+- If either the email or password are invalid, show the correct error messages below the input fields
+
+### The happy path
+
+Starting with the first point, if the form values are valid, we show a success alert instead of the form like this:
+
+```tsx
+app.post('/register', (req, res) => {
+  const result = RegisterBodySchema.safeParse(req.body);
+  if (result.success) {
+    res.send(
+      <div role="alert" class="alert alert-success w-auto mt-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>Registration Successful!</span>
+      </div>,
+    );
+  }
+});
+```
+
+We first parse the schema using Zod. We use `safeParse` here because we don't want Zod to throw if the schema is invalid and make sure we capture the errors. Zod gives us a union type based on the `success` boolean field. We check if the `success` field is **true** and if it is, we send the success alert saying **Registration Successful!**. Here's how it would look like:
+
+import fieldsValid from '@/content/blog/images/fields-valid.png';
+
+<Image
+  src={fieldsValid}
+  alt="fill the form with valid fields"
+  width={500}
+  height={500}
+/>
+
+import registrationSuccessFul from '@/content/blog/images/registration-successful.png';
+
+<Image
+  src={registrationSuccessFul}
+  alt="registration successful alert after submitting the form"
+  width={500}
+  height={500}
+/>
+
+### The path of errors
+
+That was the happy path. Now, let's check if the `result.success` field is **false** in the `else` block. What we will do here is parse error messages returned by Zod and return the same `<RegistrationForm />` component with the error messages below the inputs Zod gave us an error for.
+
+```tsx
+app.post('/register', (req, res) => {
+  const result = RegisterBodySchema.safeParse(req.body);
+  if (result.success) {
+    // the happy path
+  } else {
+    const errors: Errors = {};
+    for (let error of result.error.errors) {
+      errors[error.path[0]] = { message: error.message };
+    }
+
+    res.send(
+      <RegistrationForm
+        email={req.body.email}
+        password={req.body.password}
+        errors={errors}
+      />,
+    );
+  }
+});
+```
+
+In the above snippet, we map over the Zod errors and create an error object to pass in the `errors` prop to the `<RegistrationForm />` component. This is then checked and renderd in the following way:
+
+```tsx
+<div>
+  <h2 class="card-title">Register</h2>
+  <form hx-post="/register" hx-target="closest div" hx-swap="outerHTML">
+    <div class="form-control w-full max-w-xs">
+      ...email label and input
+      <p safe class="m-2 text-error h-4">
+        {props.errors?.email && props.errors.email.message}
+      </p>
+    </div>
+
+    <div class="form-control w-full max-w-xs">
+      ...password label and input
+      <p safe class="m-2 text-error h-4">
+        {props.errors?.password && props.errors.password.message}
+      </p>
+    </div>
+
+    <div class="mt-2 flex">
+      <button class="btn btn-primary" type="submit">
+        Register
+      </button>
+    </div>
+  </form>
+</div>
+```
+
+We show the errors in the `<p />` tag and display them if they exist in the Zod errors object. On submitting a password with only 4 characters, our API will return the error for the password field and will look something like this:
+
+import invalidPassword from '@/content/blog/images/invalid-password.png';
+
+<Image
+  src={invalidPassword}
+  alt="Invalid password error shown below the password field"
+  width={500}
+  height={500}
+/>
+
+We can see the error set below password field and it's the same we set in the registration Zod schema. We also added some height to the `<p />` tag so that there's no content layout shift when the error is shown.
+
+## Conclusion
+
+This is how we can perform form validation with HTMX and Zod. I will come up with more examples in the future with complex forms and error handling, but the concept is the same. Hope you liked the post and here's the repo again if you want to play around with it: [HTMX forms](https://github.com/ryands17/htmx-forms). Thanks for reading and follow me on Twitter: [@ryands17](https://twitter.com/ryands17).
