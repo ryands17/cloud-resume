@@ -1,0 +1,26 @@
+---
+title: Validating forms with HTMX and Zod
+date: '2023-11-17'
+tags:
+  - htmx
+  - node
+draft: true
+summary: How can we validate forms using HTMX and Zod using Express as our server
+---
+
+import { Image } from 'astro:assets';
+
+## Introduction
+
+[HTMX](https://htmx.org/) is amazing! Working with it is a breeze but it does take a while getting used to it because if you're coming from React land! In this post, we'll see how to use HTMX and Zod to validate a simple Login form and send the correct errors back to the client. If you haven't seen my previous post yet, here is is: [TodoMVC with HTMX and Hyperscript - Part 1](https://ryan17.dev/blog/todomvc-htmx).
+
+Here's the repo if you want to experiment and follow along: [HTMX Forms](https://github.com/ryands17/htmx-forms). You can think of HTMX as a server rendered app (SSR) where you send just HTML back to the browser and HTMX handles that using it's API. It can be best described as shown on the HTMX page:
+
+import htmxIntro from '@/content/blog/images/htmx-intro.png';
+
+<Image
+  src={htmxIntro}
+  alt="motivation behind creating HTMX"
+  width={500}
+  height={500}
+/>
