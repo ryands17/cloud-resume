@@ -1,0 +1,384 @@
+---
+title: APIs with Rust and Axum - Part 1
+date: '2023-11-23'
+tags:
+  - rust
+draft: false
+summary: A post on how we can create an API in Rust using Axum
+---
+
+import { Image } from 'astro:assets';
+
+## Introduction
+
+Rust as a language has amazed me! I really have started enjoying writing APIs in Rust using a framework called [Axum](https://github.com/tokio-rs/axum). It has an API similar to [Express](https://expressjs.com/) if you're coming from Node and it also makes use of `async/await` with the help of a library called [Tokio](https://tokio.rs/). So if you're have worked on APIs in Node, you'll be able to grasp on what's going on!
+
+We will be creating an API that performs CRUD on a list of todo which will use an in-memory store instead of a database to keep things simple. I will add another part after this that uses a database like SQLite or DynamoDB. Here's the repo which you can clone and follow along: [APIs with Rust and Axum](https://github.com/ryands17/axum-todos).
+
+## Project structure
+
+The project structure looks something like this:
+
+```sh
+.
+├── Cargo.lock
+├── Cargo.toml
+├── README.md
+└── src
+    ├── errors.rs
+    ├── main.rs
+    └── todos.rs
+
+2 directories, 6 files
+```
+
+We will be working mainly with the `todos.rs` file where all the endpoints will be created. Let's start with creating endpoints for performing CRUD operations.
+
+## Creating endpoints
+
+Let's start by initialising our in-memory store and the `Router` that will be used by `main.rs` to serve this API. Let's create a function for this:
+
+```rs
+use axum::Router;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Todo {
+  id: String,
+  text: String,
+  done: bool,
+}
+
+pub(crate) fn todos_service() -> Router {
+  let initial_todos: Vec<Todo> = vec![
+    Todo {
+      id: Uuid::new_v4().to_string(),
+      text: "Learn React".to_string(),
+      done: false,
+    },
+    Todo {
+      id: Uuid::new_v4().to_string(),
+      text: "Learn Vim".to_string(),
+      done: true,
+    },
+  ];
+
+  let store = Arc::new(Mutex::new(initial_todos));
+  Router::new().with_state(store)
+}
+```
+
+We first create a struct named `Todo` with three fields necessary for our API. This struct has some implementations that are derived which includes `Serialize` and `Deserialize`. These come from the package `serde` which we require to send our struct as JSON and transform JSON back into a struct. Then we initialise the `store` variable which contains the initial todos. We are using `Arc` and `Mutex` here because this state can be accessed by concurrent requests.
+
+### Fetching todos
+
+Let's create a handler that will return the list of todos from our in-memory DB:
+
+```rs
+use axum::{Json, extract::State};
+
+type Store = Mutex<Vec<Todo>>;
+type MainState = State<Arc<Store>>;
+
+async fn get_todos(State(store): MainState) -> Json<Vec<Todo>> {
+  let todos = store.lock().await.clone();
+  Json(todos)
+}
+```
+
+We create some type aliases that will help us reuse the type of our `store` variable we created above. Then we have a function called `get_todos` that takes takes in the `store` as a parameter and returns a JSON response of a list of todos. We fetch the data from the store and clone it so that the data isn't moved and lost forever and wrap it in a Json method provided to us by Axum.
+
+You must be thinking, how does `get_todos` have the store as a parameter when we haven't linked it anywhere? Let's link it to the router above so that we have it as an endpoint in our API.
+
+```rs
+use axum::{routing::get};
+
+Router::new()
+  .route("/", get(get_todos))
+  .with_state(store)
+```
+
+This will make sure that the `get_todos` function is a served as a GET request. Now, let's connect this `Router` to our main function in `main.rs`:
+
+```rs
+mod todos;
+
+use std::net::SocketAddr;
+
+use anyhow::Result;
+use axum::Router;
+
+pub(crate) fn router() -> Router {
+  Router::new()
+    .nest("/todos", todos::todos_service())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+  let app = router();
+  let addr = SocketAddr::from(([0, 0, 0, 0], 3001));
+
+  axum::Server::bind(&addr)
+    .serve(app.into_make_service())
+    .await?;
+
+  Ok(())
+}
+```
+
+Let's break this down. We create a `router` function that nests our todos service under the `/todos` route. So all requests served by the todos service will always be under the `/todos` route. This is similar to `express.router` if you've used it. We then create the address to serve our API on which is [http://localhost:3001/](http://localhost:3001/) and serve our `app` using Axum's Server module.
+
+We can see that we're using `await` thanks to Tokio, due to which we mark our main function as `async` and add the required macro from Tokio to make this work.
+
+This is already functional! If you run `cargo run` now, you will see the API running on [http://localhost:3001/](http://localhost:3001/) and let's see if we get back our todos. I'm using [Hoppscotch](https://hoppscotch.io/) to run my API's but you can use any client of your choice or even `curl` 😃
+
+import fetchTodos from '@/content/blog/images/fetch-todos.png';
+
+<Image
+  src={fetchTodos}
+  alt="Response of fetching todos from the /todos endpoint"
+  width={500}
+  height={500}
+/>
+
+Voila! We get both of our todos back from our in-memory store! How cool is that 😎. Now that we have a basic idea of how to create handlers, let's create another route.
+
+### Creating a todo
+
+We can create a todo in a similar way to how we added a todo in the previous section. Let's create the handler first:
+
+```rs
+use axum::{extract::{self, State}, Json, response::IntoResponse};
+
+#[derive(Deserialize, Serialize)]
+struct CreateTodo {
+  text: String,
+}
+
+async fn create_todo(
+  State(store): MainState,
+  extract::Json(body): extract::Json<CreateTodo>,
+) -> impl IntoResponse {
+  let mut todos = store.lock().await;
+
+  let new_todo = Todo {
+    id: Uuid::new_v4().to_string(),
+    text: body.text,
+    done: false,
+  };
+
+  todos.push(new_todo.clone());
+  Json(new_todo).into_response()
+}
+```
+
+The `create_todo` handler also take in our `store` as the parameter, but we need something extra here as we need to pass in what the `text` of the todo should be. So we need the `Json` extractor from axum to convert our body into a `CreateTodo` struct. This struct is similar to Express' `request.body` and the JSON from our request body will be deserialised thanks to `serde`.
+
+We then get todos from our `store` but we need to mark it as `mut`. All variables in Rust are immutable by default which is a great practice and the reason we need `mut` here is because we're modifying our store by adding a new todo. We create a `Todo` struct with the text from our body and push it into our store. Finally, we return the newly created todo. Finally, we attach this to our router:
+
+```rs
+  Router::new()
+    .route("/", get(get_todos).post(create_todo))
+    .with_state(store)
+```
+
+Let's see this in action:
+
+import createTodo from '@/content/blog/images/create-todo.png';
+
+<Image
+  src={createTodo}
+  alt="sending a request to create a todo with our todo text"
+  width={500}
+  height={500}
+/>
+
+And now let's fetch our list of todos:
+
+import fetchTodosAfterCreation from '@/content/blog/images/fetch-todos-after-creation.png';
+
+<Image
+  src={fetchTodosAfterCreation}
+  alt="a new todo has been added to the list successfully"
+  width={500}
+  height={500}
+/>
+
+### Deleting a todo
+
+And we're done with creation! Moving on to deleting a todo, we would need the ID of the todo to delete. This is where we introduce another one of Axum's extractors like this:
+
+```rs
+use axum::{extract::{self, State}, Json, response::IntoResponse};
+
+async fn delete_todo(Path(id): Path<String>, State(store): MainState) -> impl IntoResponse {
+  let mut todos = store.lock().await;
+  let len = todos.len();
+
+  todos.retain(|todo| todo.id != id);
+
+  if todos.len() != len {
+    StatusCode::OK.into_response()
+  } else {
+    ApiError::TodoNotFound(id).into_response()
+  }
+}
+```
+
+What we see here is a `delete_todo` handler that contains our `store` as usual and another `id` which comes from the `Path` extractor. This `id` is a `String` as we're using a UUID for all our IDs and we can use this to search for the todo to delete. As usual we fetch our todos, the length of the current list to compare and and we use a handy function that Rust provides us for vectors called `retain`. This literally tells it to retain the todo that matches the condition, which in our case is all todos apart from the one that matches the `id`.
+
+Finally, we have a condition that sends a successful response if the new length of todos doesn't match the old length or sends an error response saying that the todo doesn't exist. Errors are defined in the `errors.rs` module and can be found in the `ApiError` enum:
+
+```rs
+pub(crate) enum ApiError {
+  InternalServerError(anyhow::Error),
+  TodoNotFound(String),
+}
+```
+
+Now, we can add the `delete_todo` handler to our router:
+
+```rs
+Router::new()
+  .route("/", get(get_todos).post(create_todo))
+  .route("/:id", delete(delete_todo))
+  .with_state(store)
+```
+
+Let's see this in action:
+
+import deleteTodo from '@/content/blog/images/delete-todo.png';
+
+<Image
+  src={deleteTodo}
+  alt="sending a request to delete a todo with a valid todo ID"
+  width={500}
+  height={500}
+/>
+
+And now let's fetch our list of todos:
+
+import fetchTodosAfterDeletion from '@/content/blog/images/fetch-todos-after-deletion.png';
+
+<Image
+  src={fetchTodosAfterDeletion}
+  alt="the todo has been deleted successfully"
+  width={500}
+  height={500}
+/>
+
+What happens if we pass in an incorrect ID?
+
+import deleteTodoWithIncorrectId from '@/content/blog/images/delete-todo-error-response.png';
+
+<Image
+  src={deleteTodoWithIncorrectId}
+  alt="a clean error response when trying to delete a todo that doesn't exist"
+  width={500}
+  height={500}
+/>
+
+Because of our error enum, we have received a nice error response stating that a todo with this ID doesn't exist.
+
+### Updating a todo
+
+In this, we would need a combination of the create and delete handlers. We need the ID of the todo to edit and also the text, like the `CreateTodo` struct. Let's have a look at the handler:
+
+```rs
+async fn edit_todo(
+  State(store): MainState,
+  Path(id): Path<String>,
+  extract::Json(body): extract::Json<CreateTodo>,
+) -> impl IntoResponse {
+  let mut todos = store.lock().await;
+
+  todos
+    .iter_mut()
+    .find(|todo| todo.id == id)
+    .map(|todo| {
+      todo.text = body.text;
+      Json(todo.clone()).into_response()
+    })
+    .unwrap_or(ApiError::TodoNotFound(id).into_response())
+}
+```
+
+The process is the same, we have our `store` and also we extract the `id` and `body` from the request. Then we iterate over our todos, we use `iter_mut` in this case because we need to edit the matching todo text. We find the todo with the `id` and map over it, returning the updated todo as JSON. If we don't find a todo with a matching ID, we return the same `TodoNotFound` error response.
+
+Let's also see this in action:
+
+import editTodo from '@/content/blog/images/edit-todo.png';
+
+<Image
+  src={editTodo}
+  alt="sending a request to edit a todo with a valid todo ID and todo text"
+  width={500}
+  height={500}
+/>
+
+And now let's fetch our list of todos:
+
+import fetchTodosAfterEditing from '@/content/blog/images/fetch-todos-after-editing.png';
+
+<Image
+  src={fetchTodosAfterEditing}
+  alt="the todo has been edited successfully"
+  width={500}
+  height={500}
+/>
+
+We can see the text has been updated with what we sent in the request body. We will get a similar error as we did on deleting a todo if we pass in an invalid ID.
+
+### Writing tests
+
+No app is complete without some tests! Let's create a couple of tests just to get an idea of how we can verify responses from the API. Let's create a tests module in our `todos.rs` file to run our tests:
+
+```rs
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use axum_test_helper::TestClient;
+
+  async fn setup_tests() -> TestClient {
+    let app = crate::router();
+    TestClient::new(app)
+  }
+}
+```
+
+We're using the `axum_test_helper` library to create a test client and a `setup_tests` function that will make sure we have a working test client with our app. This uses the `router` method from `main.rs` and now we can call the API and perform assertions. Let's create a test for the GET `/todos` endpoint:
+
+```rs
+#[tokio::test]
+async fn test_get_todos() {
+  let client = setup_tests().await;
+
+  let res = client.get("/todos").send().await;
+  assert_eq!(res.status(), StatusCode::OK);
+
+  let todos: Vec<Todo> = res.json().await;
+  assert_eq!(todos.len(), 2);
+}
+```
+
+We initialise the client from the `setup_tests` function. Then we call the `/todos` endpoint and assert if we get a 200 status code in the response. We also extract the JSON from the resopnse and check if the length of the todos matches our in-memory store. This is just a basic example and here's the output of the test:
+
+import testFetchTodos from '@/content/blog/images/test-fetch-todos.png';
+
+<Image
+  src={testFetchTodos}
+  alt="testing fetch todos and expecting 2 todos in the response"
+  width={500}
+  height={500}
+/>
+
+This is how we write tests for each of our endpoints. There are other tests written in the repository in a similar manner and you can run them using `cargo test`. Yay! We completed CRUD for our Todo app in Rust 🎉
+
+## Final thoughts
+
+It's truly a joy working with Rust which isn't just for low level software but also for full fledged APIs and web apps. There's a lot more we can do with Axum like serve static files, server render applications, and more. I will also be creating another blog post on how we can create server rendered apps with Axum.
+
+I hope you liked the post, follow me on Twitter: [@ryands17](https://twitter.com/ryands17) for where I will continue posting about this series. The next part will include a persistent database like SQLite or DynamoDB so that the todos aren't lost on server restart. Happy learning 😃
