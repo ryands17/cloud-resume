@@ -637,6 +637,8 @@ app.put('/todos/:id', (req, res) => {
 
 In the above snippet, we get the ID of the todo from the params and HTMX automatically sends the edited text in the `todoText` field as that was the name of our `<input />` element. We then update the todo text and send the `<TodoItem />` with the updated todo. Notice here we don't need to update the footer count as we're not toggling the completion status on the todo. HTMX makes things simple to think and implement.
 
+## Conclusion
+
 Yay! We completed CRUD for our Todo app 🎉
 
 Thinking in HTMX requires a paradigm shift from frameworks like React, Vue and it's fun when you can directly return HTML back to the browser (**the OG SSR way**) by not sacrificing the benefits of JSX! HTMX directives mixed with a pinch of custom JS via Hyperscript makes web dev fun again! Here's the repo again for the above code: [HTMX TodoMVC](https://github.com/ryands17/htmx-todomvc).
