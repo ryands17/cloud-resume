@@ -1,0 +1,75 @@
+---
+title: Installing Husky in a subfolder
+date: '2024-03-17'
+tags:
+  - node
+draft: false
+summary: How can we install Husky in a subfolder where the parent folder is a git repository
+---
+
+import { Image } from 'astro:assets';
+import Code from '@/components/Code.astro';
+
+## Introduction
+
+This is a short post on how we can install [Husky](https://github.com/typicode/husky) in a subfolder where the parent folder is a git repository. There are times when you only want hooks to run inside a single folder or even if you have folders with different projects/langauges.
+
+The code for this can be found [here](https://github.com/ryands17/husky-subfolder) and you can follow the same steps as per your repository.
+
+## Intial steps
+
+We have a main repository here with two subfolders, `client` and `server` respectively. We want to install husky only in the `client` folder.
+
+import folderStructure from '@/content/blog/images/folder-structure.png';
+
+<Image
+  src={folderStructure}
+  alt="Initial folder structure"
+  width={500}
+  height={500}
+/>
+
+Let's start with installing husky in the `client` folder using the command: `pnpm add -D husky`. I am using [pnpm](https://pnpm.io/) here but you can use a package manager of your choice.
+
+## Initialising husky in the `client` folder
+
+The next step is making sure husky is in the client folder only and also it should detect that we're in a `.git` repository. For this, let's create a `prepare` command that looks something like this:
+
+<Code
+  code={`{
+  "prepare": "cd .. && husky ./client/.husky"
+}`}
+  lang="json"
+  wrap
+  showLineNumbers
+/>
+
+This makes sure that husky recognises the `.git` folder in the parent and the hooks are installed in the `client` folder exactly like we want to.
+
+I also have `prettier` and `lint-staged` installed as we will be running `lint-staged` in our **pre-commit** hook.
+
+<Code
+  code={`{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
+  },
+  "prettier": {
+    "singleQuote": true
+  }
+}`}
+  lang="json"
+  wrap
+  showLineNumbers
+/>
+
+## Creating the **pre-commit** hook
+
+Finally, let's create the pre-commit hook in the `.husky` folder. To do this, just create a file named `pre-commit` and add the following command:
+
+<Code code={`cd client && npx lint-staged`} lang="bash" wrap showLineNumbers />
+
+This makes sure that when the pre-commit hook runs from the parent folder, we enter in our `client` folder first and run `lint-staged` that runs prettier as the command to format all our staged files.
+
+That's it! This should run on any subfolder that you setup in this way and not affect any other folders you have!
+
+I hope you liked the post, follow me on Twitter: [@ryands17](https://twitter.com/ryands17) for where I will continue posting tips/tricks and other posts. Happy learning 😃

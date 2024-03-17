@@ -1,5 +1,5 @@
 <div
-  class="fixed bottom-8 right-8 hidden flex-col gap-3 md:hidden"
+  class="fixed bottom-8 right-8 hidden flex-col gap-3"
   id="commentsAndScrollToTopButtons"
 >
   <button
@@ -16,7 +16,7 @@
   </button>
 </div>
 
-<script>
+<script data-astro-rerun>
   // Prevents the script from being executed multiple times
   // This is due to Astro's ViewTransition feature
   globalThis.isInitialized = false;
@@ -33,11 +33,11 @@
 
     window.addEventListener('scroll', () => {
       commentsAndScrollToTopButtons?.classList.toggle(
-        'md:hidden',
+        'hidden',
         window.scrollY < 50,
       );
       commentsAndScrollToTopButtons?.classList.toggle(
-        'md:flex',
+        'flex',
         window.scrollY >= 50,
       );
     });
