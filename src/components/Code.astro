@@ -9,7 +9,12 @@ interface Props extends CodeProps {
   startLineNumberFrom?: number;
 }
 
-const { code, lang, wrap, showLineNumbers = false } = Astro.props;
+const {
+  code,
+  lang = 'shell',
+  wrap = true,
+  showLineNumbers = false,
+} = Astro.props;
 ---
 
 <style is:global>
@@ -34,4 +39,5 @@ const { code, lang, wrap, showLineNumbers = false } = Astro.props;
   lang={lang}
   wrap={wrap}
   class:list={[{ 'line-numbers': showLineNumbers }]}
+  theme="catppuccin-macchiato"
 />
