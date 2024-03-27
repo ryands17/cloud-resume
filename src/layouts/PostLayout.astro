@@ -22,7 +22,7 @@ const authors: CollectionEntry<'authors'>[] = await getEntries(
 const tags = await getEntries(post.data.tags);
 const related: CollectionEntry<'blog'>[] = await getEntries(post.data.related);
 
-// TODO: Later add support for headings and remarkPluginFrontmatter
+// TODO: Later add support for headings
 const { Content, headings, remarkPluginFrontmatter } = await post.render();
 ---
 
@@ -45,6 +45,9 @@ const { Content, headings, remarkPluginFrontmatter } = await post.render();
             </dl>
             <div>
               <PageTitle>{post.data.title}</PageTitle>
+              <p class="text-gray-500 dark:text-gray-400">
+                {remarkPluginFrontmatter.minutesRead}
+              </p>
             </div>
           </div>
         </header>
@@ -59,9 +62,8 @@ const { Content, headings, remarkPluginFrontmatter } = await post.render();
               <ul
                 class="flex flex-wrap justify-center items-center gap-4 sm:space-x-12 xl:block xl:space-x-0 xl:space-y-8"
               >
-                <!--TODO: Add support for multiple authors-->
                 {
-                  authors.map(({ data, slug }) => (
+                  authors.map(({ data }) => (
                     <>
                       <li class="flex items-center space-x-2">
                         {data.avatar && (

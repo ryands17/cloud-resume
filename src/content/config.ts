@@ -29,8 +29,6 @@ const blog = defineCollection({
     // TODO: Add support for tags-and-list layout
     layout: z.enum(['list', 'tags-and-list']).default('list'),
     bibliography: z.string().optional(),
-    canonicalUrl: z.string().optional(), // Maybe remove later, as Astro provide a better solution for canonical urls
-    // Add related posts
     related: z.array(reference('blog')).default([]),
   }),
 });
@@ -39,13 +37,7 @@ const tags = defineCollection({
   type: 'content',
   schema: z.object({
     name: z.string(),
-    description: z
-      .string()
-      .optional()
-      .transform((val) => val || ''),
-    // TODO: Add support for images and layout
-    // image: z.string().optional(),
-    // layout: z.string().optional(),
+    description: z.string().optional().default(''),
   }),
 });
 

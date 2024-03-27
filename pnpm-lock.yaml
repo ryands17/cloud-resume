@@ -20,6 +20,12 @@ dependencies:
   astro:
     specifier: ^4.5.5
     version: 4.5.5(typescript@5.4.2)
+  mdast-util-to-string:
+    specifier: ^4.0.0
+    version: 4.0.0
+  reading-time-estimator:
+    specifier: ^1.10.0
+    version: 1.10.0
   tailwindcss:
     specifier: ^3.4.1
     version: 3.4.1
@@ -3252,7 +3258,7 @@ packages:
   /@types/hast@3.0.3:
     resolution: {integrity: sha512-2fYGlaDy/qyLlhidX42wAH0KBi2TCjKMH8CHmBXgRlJ3Y+OXTiqsPQ6IWarZKwF1JoUcAJdPogv1d4b0COTpmQ==}
     dependencies:
-      '@types/unist': 2.0.8
+      '@types/unist': 3.0.2
     dev: false
 
   /@types/hast@3.0.4:
@@ -3264,7 +3270,7 @@ packages:
   /@types/mdast@4.0.3:
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
     dependencies:
-      '@types/unist': 2.0.8
+      '@types/unist': 3.0.2
     dev: false
 
   /@types/mdx@2.0.7:
@@ -7326,6 +7332,10 @@ packages:
     engines: {node: '>=8.10.0'}
     dependencies:
       picomatch: 2.3.1
+
+  /reading-time-estimator@1.10.0:
+    resolution: {integrity: sha512-Mg9M5WN33Mm0hxkd7ZITOnDLlwO1wiHB+0RGfo0FQiLTMLIeQ3Apvdgiiqmsyej1pXID46ePMDJF6iWWxSpqww==}
+    dev: false
 
   /rehype-parse@9.0.0:
     resolution: {integrity: sha512-WG7nfvmWWkCR++KEkZevZb/uw41E8TsH4DsY9UxsTbIXCVGbAs4S+r8FrQ+OtH5EEQAs+5UxKC42VinkmpA1Yw==}
