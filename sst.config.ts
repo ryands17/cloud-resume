@@ -18,6 +18,7 @@ export default {
     return { name: 'cloud-resume' };
   },
   stacks(app) {
+    app.setDefaultFunctionProps({ runtime: 'nodejs18.x' });
     if (app.region === 'us-east-1') {
       app.stack(GlobalStack);
     }
