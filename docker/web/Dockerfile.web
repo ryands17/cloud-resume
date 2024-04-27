@@ -1,0 +1,28 @@
+FROM node:18.20.2 as builder
+
+# set working directory add `/app/node_modules/.bin` to $PATH
+WORKDIR /app
+ENV PATH="/app/node_modules/.bin:$PATH"
+
+# enable PNPM
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# install app dependencies
+COPY package.json .
+COPY pnpm-lock.yaml .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# copy source code
+COPY . .
+
+RUN pnpm run check && pnpm build
+
+FROM caddy:2.7.6-alpine
+
+COPY docker/web/Caddyfile /etc/caddy/Caddyfile
+
+COPY --from=builder /app/dist /usr/share/caddy
+
+EXPOSE 3000

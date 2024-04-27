@@ -6,6 +6,7 @@
     "dev": "sst bind astro dev",
     "start": "astro dev",
     "build": "astro build",
+    "check": "tsc --noEmit",
     "preview": "astro preview",
     "astro": "astro",
     "prepare": "husky install",

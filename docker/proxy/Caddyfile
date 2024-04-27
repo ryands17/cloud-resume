@@ -1,0 +1,7 @@
+ryan17.dev {
+	reverse_proxy web:3000
+}
+
+www.ryan17.dev {
+	redir https://domain.com{uri}
+}
