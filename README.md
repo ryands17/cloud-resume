@@ -1,12 +1,6 @@
 # Cloud Resume
 
-[![Build and Deploy](https://github.com/ryands17/cloud-resume/actions/workflows/build.yaml/badge.svg)](https://github.com/ryands17/cloud-resume/actions/workflows/build.yaml)
-
 This is an [Astro](https://astro.build/), [Tailwind CSS](https://tailwindcss.com/) blogging resume/portfolio.
-
-## Infrastructure as Code (SST TypeScript)
-
-This contains the entire setup and the Astro app is deployed to S3 + CloudFront using [SST](https://docs.sst.dev/).
 
 ### Useful commands
 
