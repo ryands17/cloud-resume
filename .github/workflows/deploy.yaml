@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'docker/**'
+      - 'docker-compose.yml'
+      - 'package.json'
 
 jobs:
   build:
