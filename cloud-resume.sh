@@ -11,4 +11,4 @@
 ### END INIT INFO
 
 cd /app/projects/cloud-resume
-docker compose up -d
+docker compose -f docker-compose.dev.yml -f docker-compose.yml up -d

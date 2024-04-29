@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - '.github/**'
       - 'src/**'
       - 'docker/**'
       - 'docker-compose.yml'
@@ -24,4 +25,5 @@ jobs:
           script: |
             cd /app/projects/cloud-resume
             git pull
-            docker compose up -d
+            cp clould-resume.sh /etc/init.d/cloud-resume
+            docker compose -f docker-compose.dev.yml -f docker-compose.yml up -d
