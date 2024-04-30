@@ -26,4 +26,4 @@ jobs:
             cd /app/projects/cloud-resume
             git pull
             cp cloud-resume.sh /etc/init.d/cloud-resume
-            docker compose -f docker-compose.dev.yml -f docker-compose.yml up -d
+            docker compose -f docker-compose.dev.yml -f docker-compose.yml up --build -d

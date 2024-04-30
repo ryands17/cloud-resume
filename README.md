@@ -2,6 +2,8 @@
 
 This is an [Astro](https://astro.build/), [Tailwind CSS](https://tailwindcss.com/) blogging resume/portfolio.
 
+[![Build status](https://github.com/ryands17/cloud-resume/actions/workflows/deploy.yaml/badge.svg)](https://github.com/ryands17/cloud-resume/actions/workflows/deploy.yaml)
+
 ### Useful commands
 
 - `pnpm dev` watch for changes and compile
