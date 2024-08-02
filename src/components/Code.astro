@@ -9,12 +9,7 @@ interface Props extends CodeProps {
   startLineNumberFrom?: number;
 }
 
-const {
-  code,
-  lang = 'shell',
-  wrap = true,
-  showLineNumbers = false,
-} = Astro.props;
+const { code, lang = 'shell', showLineNumbers = false } = Astro.props;
 ---
 
 <div class="code-block-div">
@@ -22,7 +17,7 @@ const {
   <CodeElement
     {code}
     {lang}
-    {wrap}
+    wrap
     class:list={[{ 'line-numbers': showLineNumbers }]}
     theme="catppuccin-macchiato"
   />
@@ -35,20 +30,20 @@ const {
 
   .code-copy-btn {
     position: absolute;
-    right: 0;
-    top: 10px;
+    right: 15px;
+    top: 15px;
   }
 
   .line-numbers > code {
     counter-reset: step;
-    counter-increment: step calc(var(--start, 1) - 1);
+    counter-increment: step 0;
   }
 
   .line-numbers > code .line::before {
     content: counter(step);
     counter-increment: step;
-    width: 1rem;
-    margin-right: 1.5rem;
+    width: 1.5rem;
+    margin-right: 1.2rem;
     display: inline-block;
     text-align: right;
     color: rgba(115, 138, 148, 0.4);
