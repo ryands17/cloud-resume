@@ -17,7 +17,28 @@ const {
 } = Astro.props;
 ---
 
+<div class="code-block-div">
+  <sl-copy-button class="code-copy-btn" value={code}></sl-copy-button>
+  <CodeElement
+    {code}
+    {lang}
+    {wrap}
+    class:list={[{ 'line-numbers': showLineNumbers }]}
+    theme="catppuccin-macchiato"
+  />
+</div>
+
 <style is:global>
+  .code-block-div {
+    position: relative;
+  }
+
+  .code-copy-btn {
+    position: absolute;
+    right: 0;
+    top: 10px;
+  }
+
   .line-numbers > code {
     counter-reset: step;
     counter-increment: step calc(var(--start, 1) - 1);
@@ -34,10 +55,6 @@ const {
   }
 </style>
 
-<CodeElement
-  code={code}
-  lang={lang}
-  wrap={wrap}
-  class:list={[{ 'line-numbers': showLineNumbers }]}
-  theme="catppuccin-macchiato"
-/>
+<script>
+  import '@shoelace-style/shoelace/dist/components/copy-button/copy-button.js';
+</script>

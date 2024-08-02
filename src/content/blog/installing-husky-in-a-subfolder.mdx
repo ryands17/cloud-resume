@@ -41,7 +41,6 @@ The next step is making sure husky is in the client folder only and also it shou
   "prepare": "cd .. && husky ./client/.husky"
 }`}
   lang="json"
-  showLineNumbers
 />
 
 This makes sure that husky recognises the `.git` folder in the parent and the hooks are installed in the `client` folder exactly like we want to.
@@ -65,7 +64,7 @@ I also have `prettier` and `lint-staged` installed as we will be running `lint-s
 
 Finally, let's create the pre-commit hook in the `.husky` folder. To do this, just create a file named `pre-commit` and add the following command:
 
-<Code code={`cd client && npx lint-staged`} showLineNumbers />
+<Code code={`cd client && npx lint-staged`} />
 
 This makes sure that when the pre-commit hook runs from the parent folder, we enter in our `client` folder first and run `lint-staged` that runs prettier as the command to format all our staged files.
 
