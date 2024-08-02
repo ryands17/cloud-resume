@@ -1,6 +1,6 @@
 <div
   class="fixed bottom-8 right-8 hidden flex-col gap-3"
-  id="commentsAndScrollToTopButtons"
+  id="scrollTopContainer"
 >
   <button
     aria-label="Scroll To Top"
@@ -16,32 +16,22 @@
   </button>
 </div>
 
-<script data-astro-rerun>
-  // Prevents the script from being executed multiple times
-  // This is due to Astro's ViewTransition feature
-  globalThis.isInitialized = false;
-
-  if (!globalThis.isInitialized) {
-    const scrollToTopButton = document.getElementById('scrollToTopButton');
-    const commentsAndScrollToTopButtons = document.getElementById(
-      'commentsAndScrollToTopButtons',
-    );
+<script>
+  function setupListeners() {
+    const scrollBtnContainer = document.querySelector('#scrollTopContainer');
+    const scrollToTopButton = document.querySelector('#scrollToTopButton');
 
     scrollToTopButton?.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     window.addEventListener('scroll', () => {
-      commentsAndScrollToTopButtons?.classList.toggle(
-        'hidden',
-        window.scrollY < 50,
-      );
-      commentsAndScrollToTopButtons?.classList.toggle(
-        'flex',
-        window.scrollY >= 50,
-      );
+      scrollBtnContainer?.classList.toggle('hidden', window.scrollY < 50);
+      scrollBtnContainer?.classList.toggle('flex', window.scrollY >= 50);
     });
-
-    globalThis.isInitialized = true;
   }
+
+  document.addEventListener('astro:page-load', () => {
+    setupListeners();
+  });
 </script>

@@ -17,25 +17,32 @@
   </svg>
 </button>
 
-<script data-astro-rerun lang="ts">
-  // Detect system preference change
-  window
-    .matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', (event) => {
-      setTheme(event.matches ? 'dark' : 'light');
-    });
+<script>
+  function setupListeners() {
+    // Detect system preference change
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', (event) => {
+        setTheme(event.matches ? 'dark' : 'light');
+      });
+
+    // Add event listener
+    document
+      .querySelector('button[aria-label="Toggle Dark Mode"]')
+      ?.addEventListener('click', toggleTheme);
+  }
 
   // Set theme
-  function setTheme(newTheme) {
+  function setTheme(newTheme: string) {
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.remove('dark', 'light');
     document.documentElement.classList.add(newTheme);
     document
       .querySelector('button[aria-label="Toggle Dark Mode"] .sun')
-      .classList.toggle('hidden', newTheme !== 'dark');
+      ?.classList.toggle('hidden', newTheme !== 'dark');
     document
       .querySelector('button[aria-label="Toggle Dark Mode"] .moon')
-      .classList.toggle('hidden', newTheme !== 'light');
+      ?.classList.toggle('hidden', newTheme !== 'light');
   }
 
   // Toggle theme
@@ -55,13 +62,10 @@
   }
 
   // Set initial theme
-  setTheme(localStorage.getItem('theme'));
+  setTheme(localStorage.getItem('theme') || 'dark');
 
-  // Add event listener
-  document
-    .querySelector('button[aria-label="Toggle Dark Mode"]')
-    .addEventListener('click', toggleTheme);
-  document.addEventListener('astro:after-swap', () =>
-    setTheme(localStorage.getItem('theme')),
-  );
+  document.addEventListener('astro:page-load', () => {
+    setupListeners();
+    setTheme(localStorage.getItem('theme') || 'dark');
+  });
 </script>
