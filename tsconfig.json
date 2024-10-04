@@ -4,8 +4,13 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "src"
+  ]
 }

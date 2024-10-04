@@ -1,8 +1,6 @@
 # Cloud Resume
 
-This is my portfolio and blog made with [Astro](https://astro.build/) and [Tailwind CSS](https://tailwindcss.com/).
-
-[![Build status](https://github.com/ryands17/cloud-resume/actions/workflows/deploy.yaml/badge.svg)](https://github.com/ryands17/cloud-resume/actions/workflows/deploy.yaml)
+This is my portfolio and blog made with [Astro](https://astro.build/) and [Tailwind CSS](https://tailwindcss.com/) deployed using [SST](https://sst.dev/).
 
 ### Useful commands
 
