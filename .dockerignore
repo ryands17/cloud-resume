@@ -27,3 +27,6 @@ dist-ssr
 .git
 README.md
 docker-compose*
+*.pem
+id_*
+.env
