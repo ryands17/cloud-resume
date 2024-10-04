@@ -5,7 +5,7 @@ import { resolve as pathResolve } from 'node:path';
 import packageJson from './package.json';
 
 export default $config({
-  app(input) {
+  app(_input) {
     return {
       name: 'vps-demo',
       removal: 'remove',
@@ -40,12 +40,6 @@ export default $config({
     const firewall = new hcloud.Firewall('appServerFirewall', {
       name: 'appServerFirewall',
       rules: [
-        {
-          direction: 'in',
-          protocol: 'tcp',
-          port: '22',
-          sourceIps: ['0.0.0.0/0', '::/0'],
-        },
         {
           direction: 'in',
           protocol: 'tcp',
@@ -89,7 +83,7 @@ export default $config({
 
     // Connect to the Docker Server on the Hetzner Server
     const dockerServer = new docker.Provider('dockerServer', {
-      host: $interpolate`ssh://root@${vm.ipv4Address}`,
+      host: $interpolate`ssh://root@appserver`,
       sshOpts: [
         '-i',
         sshKeyLocalPath,
@@ -163,12 +157,40 @@ export default $config({
     );
 
     new cloudflare.Record(
+      'rootA4Record',
+      {
+        zoneId: zone.id,
+        name: domain,
+        type: 'AAAA',
+        content: vm.ipv6Address,
+        proxied: true,
+      },
+      {
+        dependsOn: [vm],
+      },
+    );
+
+    new cloudflare.Record(
       'rootWwwRecord',
       {
         zoneId: zone.id,
         name: 'www.' + domain,
         type: 'A',
         value: vm.ipv4Address,
+        proxied: true,
+      },
+      {
+        dependsOn: [vm],
+      },
+    );
+
+    new cloudflare.Record(
+      'rootWwwA4Record',
+      {
+        zoneId: zone.id,
+        name: 'www.' + domain,
+        type: 'AAAA',
+        value: vm.ipv6Address,
         proxied: true,
       },
       {
