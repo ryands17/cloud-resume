@@ -3,10 +3,8 @@
   "type": "module",
   "version": "2.0.0",
   "scripts": {
-    "sst": "sst",
     "dev": "astro dev",
     "build": "astro build",
-    "deploy": "pnpm sst deploy --stage prod",
     "check": "tsc --noEmit",
     "preview": "astro preview",
     "prepare": "husky install"
@@ -30,22 +28,7 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "prettier-plugin-astro": "^0.12.3",
-    "sst": "3.1.61",
     "typescript": "^5.6.2"
-  },
-  "pnpm": {
-    "supportedArchitectures": {
-      "os": [
-        "current"
-      ],
-      "cpu": [
-        "x64",
-        "arm64"
-      ]
-    },
-    "overrides": {
-      "sharp": "0.33.3"
-    }
   },
   "prettier": {
     "singleQuote": true,
@@ -65,6 +48,5 @@
     "*.{ts, astro, cjs, mjs, js, mdx, md, css}": [
       "prettier --write"
     ]
-  },
-  "packageManager": "pnpm@9.12.0+sha512.4abf725084d7bcbafbd728bfc7bee61f2f791f977fd87542b3579dcb23504d170d46337945e4c66485cd12d588a0c0e570ed9c477e7ccdd8507cf05f3f92eaca"
+  }
 }

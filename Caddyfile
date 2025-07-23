@@ -1,9 +1,5 @@
-ryan17.dev {
+:80 {
 	root * /usr/share/caddy
 	encode gzip
 	file_server
-}
-
-www.ryan17.dev {
-	redir https://ryan17.dev{uri}
 }
